@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, Menu } from 'lucide-react';
+import { ShoppingCart, Search, Menu, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useCart } from '@/context/CartContext';
@@ -40,13 +40,20 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-2">
             <Input type="search" placeholder="Search products..." className="w-48 lg:w-64" />
             <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
             </Button>
           </div>
+          
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/auth">
+              <User className="h-5 w-5" />
+               <span className="sr-only">Login / Sign Up</span>
+            </Link>
+          </Button>
 
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart">
