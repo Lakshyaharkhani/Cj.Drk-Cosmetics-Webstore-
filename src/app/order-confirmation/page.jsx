@@ -11,6 +11,7 @@ export default function OrderConfirmationPage() {
     const [orderNumber, setOrderNumber] = useState(null);
 
     useEffect(() => {
+        // Generate a random order number only on the client-side after mounting
         setOrderNumber(Math.floor(Math.random() * 900000) + 100000);
     },[])
 
@@ -25,7 +26,7 @@ export default function OrderConfirmationPage() {
         <CardContent className="text-center">
             <div className="border-t border-b py-6 my-6">
                 <p className="text-muted-foreground">Order Number</p>
-                <p className="text-2xl font-bold font-mono mt-1">{orderNumber}</p>
+                <p className="text-2xl font-bold font-mono mt-1">{orderNumber || 'Generating...'}</p>
             </div>
             <p className="text-muted-foreground mb-6">You will receive an email confirmation shortly with your order details and tracking information.</p>
             <Button asChild>
