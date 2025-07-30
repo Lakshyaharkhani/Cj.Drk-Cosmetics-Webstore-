@@ -1,9 +1,18 @@
 
+'use client';
+
 import Link from 'next/link';
 import { getPolicies } from '@/lib/data';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
     const policies = getPolicies();
+    const [currentYear, setCurrentYear] = useState(null);
+
+    useEffect(() => {
+        setCurrentYear(new Date().getFullYear());
+    }, []);
+
   return (
     <footer className="bg-secondary text-secondary-foreground">
       <div className="container mx-auto grid grid-cols-1 gap-8 px-4 py-12 md:grid-cols-4">
@@ -42,7 +51,7 @@ export default function Footer() {
       </div>
       <div className="border-t">
         <div className="container mx-auto px-4 py-4 text-center text-sm">
-          &copy; {new Date().getFullYear()} ElectroCart. All rights reserved.
+          &copy; {currentYear || new Date().getFullYear()} ElectroCart. All rights reserved.
         </div>
       </div>
     </footer>
