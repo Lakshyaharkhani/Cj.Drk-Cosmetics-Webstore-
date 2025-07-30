@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, Menu, User } from 'lucide-react';
+import { ShoppingCart, Search, Menu, User, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useCart } from '@/context/CartContext';
@@ -53,6 +53,13 @@ export default function Header() {
             <Link href="/auth">
               <User className="h-5 w-5" />
                <span className="sr-only">Login / Sign Up</span>
+            </Link>
+          </Button>
+
+           <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin">
+              <Shield className="h-5 w-5" />
+               <span className="sr-only">Admin</span>
             </Link>
           </Button>
 
