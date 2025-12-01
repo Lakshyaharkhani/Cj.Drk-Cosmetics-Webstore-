@@ -230,39 +230,6 @@ const policies = [
       },
 ];
 
-const analyticsData = {
-    totalRevenue: 45231.89,
-    revenueChange: 20.1,
-    subscriptions: 2350,
-    subscriptionsChange: 180.1,
-    sales: 12234,
-    salesChange: 19,
-    activeNow: 573,
-    activeNowChange: '+201',
-    recentTransactions: [
-        { name: 'Olivia Martin', email: 'olivia.martin@email.com', amount: 1999.00 },
-        { name: 'Jackson Lee', email: 'jackson.lee@email.com', amount: 39.00 },
-        { name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', amount: 299.00 },
-        { name: 'William Kim', email: 'will@email.com', amount: 99.00 },
-        { name: 'Sofia Davis', email: 'sofia.davis@email.com', amount: 39.00 },
-    ],
-    recentSales: [
-        { name: 'Olivia Martin', email: 'olivia.martin@email.com', amount: 1999.00 },
-        { name: 'Jackson Lee', email: 'jackson.lee@email.com', amount: 39.00 },
-        { name: 'Isabella Nguyen', email: 'isabella.nguyen@email.com', amount: 299.00 },
-        { name: 'William Kim', email: 'will@email.com', amount: 99.00 },
-        { name: 'Sofia Davis', email: 'sofia.davis@email.com', amount: 39.00 },
-    ],
-    salesByMonth: [
-        { name: "Jan", total: Math.floor(Math.random() * 5000) + 1000 },
-        { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
-        { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
-        { name: "Apr", total: Math.floor(Math.random() * 5000) + 1000 },
-        { name: "May", total: Math.floor(Math.random() * 5000) + 1000 },
-        { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
-    ]
-};
-
 export function getCategories() {
   return categories;
 }
@@ -288,9 +255,4 @@ export function getPolicies() {
 
 export function getPolicyBySlug(slug) {
     return policies.find(p => p.slug === slug);
-}
-
-
-export function getAnalyticsData() {
-    return analyticsData;
 }
