@@ -1,223 +1,234 @@
-
 'use client';
-
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import {
+  Activity,
+  ArrowUpRight,
+  CircleUser,
+  CreditCard,
+  DollarSign,
+  Menu,
+  Package2,
+  Search,
+  Users,
+} from 'lucide-react';
+import Link from 'next/link';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { getCategories } from '@/lib/data';
-import { addProductAction } from './actions';
-import { PlusCircle, Trash2 } from 'lucide-react';
-import React from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { getAnalyticsData } from '@/lib/data';
 
-const productSchema = z.object({
-  name: z.string().min(3, 'Product name must be at least 3 characters.'),
-  description: z.string().min(10, 'Description must be at least 10 characters.'),
-  price: z.coerce.number().min(0, 'Price must be a positive number.'),
-  originalPrice: z.coerce.number().optional(),
-  brand: z.string().min(2, 'Brand is required.'),
-  categorySlug: z.string({ required_error: 'Please select a category.' }),
-  stockStatus: z.enum(['In Stock', 'Low Stock', 'Out of Stock']),
-  images: z.array(z.string().url('Must be a valid URL')).min(1, 'At least one image URL is required.'),
-  features: z.array(z.object({ value: z.string().min(1, 'Feature cannot be empty.') })),
-  specifications: z.array(z.object({
-    key: z.string().min(1, 'Spec key cannot be empty.'),
-    value: z.string().min(1, 'Spec value cannot be empty.'),
-  })),
-});
-
-export default function AdminProductUploadPage() {
-  const { toast } = useToast();
-  const categories = getCategories();
-
-  const form = useForm({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      price: 0,
-      originalPrice: undefined,
-      brand: '',
-      categorySlug: '',
-      stockStatus: 'In Stock',
-      images: [''],
-      features: [{ value: '' }],
-      specifications: [{ key: '', value: '' }],
-    },
-  });
-
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-    control: form.control,
-    name: "images"
-  });
-
-  const { fields: featureFields, append: appendFeature, remove: removeFeature } = useFieldArray({
-    control: form.control,
-    name: "features"
-  });
-
-  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
-    control: form.control,
-    name: "specifications"
-  });
-
-
-  const onSubmit = async (data) => {
-    try {
-        await addProductAction(data);
-        toast({
-            title: 'Product Added!',
-            description: `${data.name} has been successfully added.`,
-        });
-        form.reset();
-        // Reset field arrays
-        form.setValue('images', ['']);
-        form.setValue('features', [{value: ''}]);
-        form.setValue('specifications', [{key: '', value: ''}]);
-    } catch (error) {
-        toast({
-            title: 'Error',
-            description: 'Failed to add the product. Please try again.',
-            variant: 'destructive',
-        });
-        console.error(error);
-    }
-  };
+export default function AdminDashboardPage() {
+    const analyticsData = getAnalyticsData();
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="font-headline text-3xl">Add New Product</CardTitle>
-          <CardDescription>Fill out the form below to add a new product to your store.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} placeholder="e.g., AeroSound Pro TWS Earbuds" /></FormControl><FormMessage /></FormItem>
-              )} />
-              
-              <FormField control={form.control} name="description" render={({ field }) => (
-                <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea {...field} placeholder="Describe the product..." /></FormControl><FormMessage /></FormItem>
-              )} />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField control={form.control} name="price" render={({ field }) => (
-                  <FormItem><FormLabel>Price (Rs)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="originalPrice" render={({ field }) => (
-                  <FormItem><FormLabel>Original Price (Optional, Rs)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField control={form.control} name="brand" render={({ field }) => (
-                  <FormItem><FormLabel>Brand</FormLabel><FormControl><Input {...field} placeholder="e.g., AeroSound" /></FormControl><FormMessage /></FormItem>
-                )} />
-                 <FormField control={form.control} name="categorySlug" render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                                {categories.map(cat => (
-                                    <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <FormMessage />
-                    </FormItem>
-                 )} />
-              </div>
-              
-              <FormField control={form.control} name="stockStatus" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stock Status</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select stock status" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="In Stock">In Stock</SelectItem>
-                            <SelectItem value="Low Stock">Low Stock</SelectItem>
-                            <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-                        </SelectContent>
-                    </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-            <div>
-                <FormLabel>Image URLs</FormLabel>
-                {imageFields.map((field, index) => (
-                    <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`images.${index}`}
-                    render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 mt-2">
-                            <FormControl><Input {...field} placeholder="https://placehold.co/600x600" /></FormControl>
-                            {imageFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeImage(index)}><Trash2/></Button>}
-                        </FormItem>
-                    )}
-                    />
-                ))}
-                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendImage('')}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Image URL
+    <>
+      <div className="flex items-center">
+        <h1 className="text-lg font-semibold md:text-2xl">Dashboard</h1>
+      </div>
+      <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
+        <div className="flex flex-col items-center gap-1 text-center p-8 w-full">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4 w-full">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Revenue
+                </CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Rs {analyticsData.totalRevenue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  +{analyticsData.revenueChange}% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Subscriptions
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{analyticsData.subscriptions.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  +{analyticsData.subscriptionsChange}% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Sales</CardTitle>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{analyticsData.sales.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  +{analyticsData.salesChange}% from last month
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Active Now
+                </CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+{analyticsData.activeNow}</div>
+                <p className="text-xs text-muted-foreground">
+                  {analyticsData.activeNowChange} since last hour
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3 w-full mt-8">
+            <Card className="xl:col-span-2">
+              <CardHeader className="flex flex-row items-center">
+                <div className="grid gap-2">
+                  <CardTitle>Transactions</CardTitle>
+                  <CardDescription>
+                    Recent transactions from your store.
+                  </CardDescription>
+                </div>
+                <Button asChild size="sm" className="ml-auto gap-1">
+                  <Link href="#">
+                    View All
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
                 </Button>
-            </div>
-            
-            <div>
-                <FormLabel>Features</FormLabel>
-                {featureFields.map((field, index) => (
-                    <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={`features.${index}.value`}
-                    render={({ field }) => (
-                        <FormItem className="flex items-center gap-2 mt-2">
-                        <FormControl><Input {...field} placeholder="e.g., Active Noise Cancellation" /></FormControl>
-                        {featureFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeFeature(index)}><Trash2/></Button>}
-                        </FormItem>
-                    )}
-                    />
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead className="hidden xl:table-column">
+                        Type
+                      </TableHead>
+                      <TableHead className="hidden xl:table-column">
+                        Status
+                      </TableHead>
+                      <TableHead className="hidden xl:table-column">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analyticsData.recentTransactions.map((t,i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="font-medium">{t.name}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline">
+                          {t.email}
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden xl:table-column">
+                        Sale
+                      </TableCell>
+                      <TableCell className="hidden xl:table-column">
+                        <Badge className="text-xs" variant="outline">
+                          Approved
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                        2023-06-23
+                      </TableCell>
+                      <TableCell className="text-right">Rs {t.amount.toFixed(2)}</TableCell>
+                    </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Sales</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-8">
+                {analyticsData.recentSales.map((s,i) => (
+                <div className="flex items-center gap-4" key={i}>
+                  <Avatar className="hidden h-9 w-9 sm:flex">
+                    <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                    <AvatarFallback>{s.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="grid gap-1">
+                    <p className="text-sm font-medium leading-none">
+                      {s.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {s.email}
+                    </p>
+                  </div>
+                  <div className="ml-auto font-medium">+Rs {s.amount.toFixed(2)}</div>
+                </div>
                 ))}
-                 <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendFeature({ value: '' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Feature
-                </Button>
+              </CardContent>
+            </Card>
+          </div>
+            <div className="w-full mt-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Sales Overview</CardTitle>
+                        <CardDescription>An overview of sales for the last 6 months.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                         <ResponsiveContainer width="100%" height={350}>
+                            <BarChart data={analyticsData.salesByMonth}>
+                                <XAxis
+                                dataKey="name"
+                                stroke="#888888"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                                />
+                                <YAxis
+                                stroke="#888888"
+                                fontSize={12}
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(value) => `Rs ${value / 1000}K`}
+                                />
+                                <Bar
+                                dataKey="total"
+                                fill="currentColor"
+                                radius={[4, 4, 0, 0]}
+                                className="fill-primary"
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
             </div>
-            
-            <div>
-                <FormLabel>Specifications</FormLabel>
-                {specFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2 mt-2">
-                    <FormField control={form.control} name={`specifications.${index}.key`} render={({ field }) => (
-                        <FormItem className="flex-1"><FormControl><Input {...field} placeholder="e.g., Bluetooth Version" /></FormControl></FormItem>
-                    )} />
-                     <FormField control={form.control} name={`specifications.${index}.value`} render={({ field }) => (
-                        <FormItem className="flex-1"><FormControl><Input {...field} placeholder="e.g., 5.3" /></FormControl></FormItem>
-                    )} />
-                    {specFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeSpec(index)}><Trash2/></Button>}
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendSpec({ key: '', value: '' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Specification
-                </Button>
-            </div>
-
-
-              <Button type="submit" size="lg" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Adding Product...' : 'Add Product'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
