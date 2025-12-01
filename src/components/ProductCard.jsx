@@ -40,9 +40,9 @@ export default function ProductCard({ product }) {
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4 pt-0">
         <div>
-          <span className="text-xl font-bold">₹{product.price}</span>
+          <span className="text-xl font-bold">Rs {product.price}</span>
           {product.originalPrice && (
-            <span className="ml-2 text-sm text-muted-foreground line-through">₹{product.originalPrice}</span>
+            <span className="ml-2 text-sm text-muted-foreground line-through">Rs {product.originalPrice}</span>
           )}
         </div>
         <Button size="icon" variant="outline" onClick={() => addToCart(product)}>

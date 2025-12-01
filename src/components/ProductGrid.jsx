@@ -94,8 +94,8 @@ export default function ProductGrid({ allProducts, allCategories }) {
               onValueChange={(value) => setPriceRange(value)}
             />
             <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-              <span>₹{priceRange[0]}</span>
-              <span>₹{priceRange[1]}</span>
+              <span>Rs {priceRange[0]}</span>
+              <span>Rs {priceRange[1]}</span>
             </div>
           </div>
 

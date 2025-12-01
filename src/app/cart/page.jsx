@@ -60,7 +60,7 @@ export default function CartPage() {
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</p>
+                            <p className="font-bold">Rs {(item.price * item.quantity).toFixed(2)}</p>
                             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive mt-2" onClick={() => removeFromCart(item.id)}>
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -79,7 +79,7 @@ export default function CartPage() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal ({cartCount} items)</span>
-                  <span className="font-medium">₹{cartTotal.toFixed(2)}</span>
+                  <span className="font-medium">Rs {cartTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Shipping</span>
@@ -88,7 +88,7 @@ export default function CartPage() {
                 <Separator />
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>₹{cartTotal.toFixed(2)}</span>
+                  <span>Rs {cartTotal.toFixed(2)}</span>
                 </div>
               </CardContent>
               <CardFooter className="flex-col gap-4">
