@@ -1,4 +1,3 @@
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -20,11 +19,11 @@ export default function Home() {
           src="https://placehold.co/1600x900"
           alt="Natural soaps and cosmetics on a clean background"
           data-ai-hint="natural cosmetics"
-          layout="fill"
+          fill
           objectFit="cover"
           className="brightness-50"
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center text-white">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center text-white p-4">
           <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl">Naturally Cold-Pressed Soaps.</h1>
           <p className="mt-4 max-w-2xl text-lg md:text-xl">
             Discover the beauty of nature with our handcrafted cosmetics. Pure, simple, and effective.
@@ -63,8 +62,8 @@ export default function Home() {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="ml-12" />
-          <CarouselNext className="mr-12" />
+          <CarouselPrevious className="ml-12 hidden sm:flex" />
+          <CarouselNext className="mr-12 hidden sm:flex" />
         </Carousel>
       </section>
 
