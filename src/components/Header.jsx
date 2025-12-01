@@ -13,6 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useState } from 'react';
+import { Separator } from './ui/separator';
 
 export default function Header() {
   const { cartCount } = useCart();
@@ -49,6 +50,19 @@ export default function Header() {
                   <nav className="flex flex-col gap-2">
                     <NavLinks />
                   </nav>
+                  <Separator className="my-4" />
+                  <div className="flex flex-col gap-2">
+                     <Button variant="outline" asChild>
+                        <Link href="/auth" onClick={() => setSheetOpen(false)}>
+                            <User className="mr-2" /> Login / Sign Up
+                        </Link>
+                     </Button>
+                     <Button variant="outline" asChild>
+                        <Link href="/admin" onClick={() => setSheetOpen(false)}>
+                           <Shield className="mr-2" /> Admin
+                        </Link>
+                     </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -69,19 +83,22 @@ export default function Header() {
             </Button>
           </div>
           
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/auth">
-              <User className="h-5 w-5" />
-               <span className="sr-only">Login / Sign Up</span>
-            </Link>
-          </Button>
+          <div className="hidden md:flex items-center">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/auth">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Login / Sign Up</span>
+              </Link>
+            </Button>
 
-           <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin">
-              <Shield className="h-5 w-5" />
-               <span className="sr-only">Admin</span>
-            </Link>
-          </Button>
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/admin">
+                <Shield className="h-5 w-5" />
+                <span className="sr-only">Admin</span>
+              </Link>
+            </Button>
+          </div>
+
 
           <Button variant="ghost" size="icon" asChild>
             <Link href="/cart">
@@ -99,3 +116,4 @@ export default function Header() {
     </header>
   );
 }
+
