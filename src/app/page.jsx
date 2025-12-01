@@ -18,16 +18,16 @@ export default function Home() {
       <section className="relative h-[60vh] w-full">
         <Image
           src="https://placehold.co/1600x900"
-          alt="Modern electronics on a clean background"
-          data-ai-hint="modern electronics"
+          alt="Natural soaps and cosmetics on a clean background"
+          data-ai-hint="natural cosmetics"
           layout="fill"
           objectFit="cover"
           className="brightness-50"
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center text-white">
-          <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl">Tech Essentials, Delivered.</h1>
+          <h1 className="font-headline text-5xl md:text-7xl lg:text-8xl">Naturally Cold-Pressed Soaps.</h1>
           <p className="mt-4 max-w-2xl text-lg md:text-xl">
-            From power banks to earbuds, find the perfect gear to power your life. Fast, reliable, and right at your fingertips.
+            Discover the beauty of nature with our handcrafted cosmetics. Pure, simple, and effective.
           </p>
           <Button asChild size="lg" className="mt-8 bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-300 transform hover:scale-105">
             <Link href="/products">
@@ -71,7 +71,7 @@ export default function Home() {
       {/* Categories Section */}
       <section className="container mx-auto px-4">
         <h2 className="font-headline text-4xl mb-8 text-center">Shop by Category</h2>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
             <Link key={category.id} href={`/products?category=${category.slug}`} className="group">
               <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">

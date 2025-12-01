@@ -6,8 +6,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export const metadata = {
-  title: 'ElectroCart',
-  description: 'Your one-stop shop for the latest electronics.',
+  title: 'Cj.Drk',
+  description: 'Your one-stop shop for natural, cold-pressed soaps and cosmetics.',
 };
 
 export default function RootLayout({

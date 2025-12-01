@@ -34,7 +34,7 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-headline text-2xl font-bold">
-            ElectroCart
+            Cj.Drk
           </Link>
           <nav className="hidden items-center gap-4 md:flex">
             <NavLinks />
@@ -86,7 +86,7 @@ export default function Header() {
               <SheetContent side="left">
                 <div className="flex flex-col gap-4 p-4">
                   <Link href="/" className="font-headline text-2xl font-bold mb-4" onClick={() => setSheetOpen(false)}>
-                    ElectroCart
+                    Cj.Drk
                   </Link>
                   <nav className="flex flex-col gap-2">
                     <NavLinks />
