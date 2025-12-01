@@ -57,11 +57,6 @@ export default function Header() {
                             <User className="mr-2" /> Login / Sign Up
                         </Link>
                      </Button>
-                     <Button variant="outline" asChild>
-                        <Link href="/admin" onClick={() => setSheetOpen(false)}>
-                           <Shield className="mr-2" /> Admin
-                        </Link>
-                     </Button>
                   </div>
                 </div>
               </SheetContent>
@@ -90,13 +85,6 @@ export default function Header() {
                 <span className="sr-only">Login / Sign Up</span>
               </Link>
             </Button>
-
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/admin">
-                <Shield className="h-5 w-5" />
-                <span className="sr-only">Admin</span>
-              </Link>
-            </Button>
           </div>
 
 
@@ -116,4 +104,5 @@ export default function Header() {
     </header>
   );
 }
+
 
