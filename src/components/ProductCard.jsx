@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { Star, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '../context/CartContext';
 import { Skeleton } from './ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn } from '../lib/utils';
 import ProductCardSkeleton from './ProductCardSkeleton';
 
 

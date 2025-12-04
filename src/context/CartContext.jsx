@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { createContext, useContext, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '../hooks/use-toast';
 
 const CartContext = createContext(undefined);
 

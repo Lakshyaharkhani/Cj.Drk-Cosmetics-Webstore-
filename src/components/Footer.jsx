@@ -1,8 +1,7 @@
-
 'use client';
 
 import Link from 'next/link';
-import { getPolicies, getCategories } from '@/lib/data';
+import { getPolicies, getCategories } from '../lib/data';
 import { useState, useEffect } from 'react';
 
 export default function Footer() {
