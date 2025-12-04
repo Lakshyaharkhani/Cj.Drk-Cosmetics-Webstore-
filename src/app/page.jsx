@@ -9,7 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
 import { collection, limit, query } from 'firebase/firestore';
 
 export default function Home() {
