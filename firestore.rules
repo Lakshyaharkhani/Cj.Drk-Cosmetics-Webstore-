@@ -92,6 +92,21 @@ service cloud.firestore {
       allow update: if false; // TODO: Implement admin or vendor role-based access.
       allow delete: if false; // TODO: Implement admin or vendor role-based access.
     }
+    
+    /**
+     * @description Publicly readable catalog of categories. Writes are currently disabled.
+     * @path /categories/{categoryId}
+     * @allow (get) Any user, signed in or not, can read category details.
+     * @deny (create) Any user attempting to create a new category.
+     * @principle Public read access for catalog data with locked-down writes for security.
+     */
+    match /categories/{categoryId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // TODO: Implement admin or vendor role-based access.
+      allow update: if false; // TODO: Implement admin or vendor role-based access.
+      allow delete: if false; // TODO: Implement admin or vendor role-based access.
+    }
 
     /**
      * @description Publicly readable list of vendors. Writes are currently disabled.
