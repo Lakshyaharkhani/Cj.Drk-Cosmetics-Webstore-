@@ -2,18 +2,25 @@
 'use client';
 
 import Image from 'next/image';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import ProductDetails from '../../../components/ProductDetails';
 import { Star } from 'lucide-react';
-import { useDoc } from '../../../firebase';
+import { useDoc, useMemoFirebase } from '../../../firebase';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '../../../firebase/provider';
 import ProductLoadingPage from './loading';
 
-export default function ProductPage({ params }) {
+export default function ProductPage() {
+  const params = useParams();
   const firestore = useFirestore();
-  const productRef = doc(firestore, 'products', params.id);
+  const productId = Array.isArray(params.id) ? params.id[0] : params.id;
+  
+  const productRef = useMemoFirebase(() => {
+    if (!firestore || !productId) return null;
+    return doc(firestore, 'products', productId);
+  }, [firestore, productId]);
+
   const { data: product, isLoading } = useDoc(productRef);
 
   if (isLoading) {

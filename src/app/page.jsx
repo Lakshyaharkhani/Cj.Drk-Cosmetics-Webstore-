@@ -9,7 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { getCategories } from '../lib/data';
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';
-import { useCollection } from '../firebase';
+import { useCollection, useMemoFirebase } from '../firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import { useFirestore } from '../firebase/provider';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
@@ -17,8 +17,13 @@ import ProductCardSkeleton from '../components/ProductCardSkeleton';
 export default function Home() {
   const categories = getCategories();
   const firestore = useFirestore();
-  const productsCollection = collection(firestore, 'products');
-  const featuredProductsQuery = query(productsCollection, limit(8));
+  
+  const featuredProductsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    const productsCollection = collection(firestore, 'products');
+    return query(productsCollection, limit(8));
+  }, [firestore]);
+
   const { data: featuredProducts, isLoading } = useCollection(featuredProductsQuery);
 
   return (

@@ -2,7 +2,7 @@
 'use client';
 import ProductGrid from '../../components/ProductGrid';
 import { getCategories } from '../../lib/data';
-import { useCollection } from '../../firebase';
+import { useCollection, useMemoFirebase } from '../../firebase';
 import { collection } from 'firebase/firestore';
 import { useFirestore } from '../../firebase/provider';
 
@@ -11,7 +11,11 @@ export default function ProductsPage({
   searchParams,
 }) {
   const firestore = useFirestore();
-  const { data: products, isLoading } = useCollection(collection(firestore, 'products'));
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+  const { data: products, isLoading } = useCollection(productsQuery);
   const categories = getCategories();
 
   const selectedCategory = searchParams.category || 'all';

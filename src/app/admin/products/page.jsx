@@ -10,14 +10,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import Link from 'next/link';
-import { useCollection } from '../../../firebase';
+import { useCollection, useMemoFirebase } from '../../../firebase';
 import { collection, deleteDoc, doc } from 'firebase/firestore';
 import { useFirestore } from '../../../firebase/provider';
 import { useToast } from '../../../hooks/use-toast';
 
 export default function AdminProductsPage() {
   const firestore = useFirestore();
-  const { data: products, isLoading } = useCollection(collection(firestore, 'products'));
+  const productsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'products');
+  }, [firestore]);
+  const { data: products, isLoading } = useCollection(productsQuery);
   const { toast } = useToast();
 
   const handleDelete = async (productId, productName) => {
