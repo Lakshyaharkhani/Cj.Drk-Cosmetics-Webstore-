@@ -14,8 +14,6 @@ import { useToast } from '../../../hooks/use-toast';
 import { getCategories } from '../../../lib/data';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import React from 'react';
-import { useFirestore } from '../../../firebase/provider';
-import { collection, addDoc } from 'firebase/firestore';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
@@ -36,8 +34,6 @@ const productSchema = z.object({
 export default function AdminProductUploadPage() {
   const { toast } = useToast();
   const categories = getCategories();
-  const firestore = useFirestore();
-  const productsCollection = collection(firestore, 'products');
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -73,31 +69,8 @@ export default function AdminProductUploadPage() {
 
   const onSubmit = async (data) => {
     try {
-      const categoriesData = getCategories();
-      const category = categoriesData.find(c => c.slug === data.categorySlug);
-        
-        const newProduct = {
-          name: data.name,
-          price: data.price,
-          originalPrice: data.originalPrice || null,
-          description: data.description,
-          images: data.images.filter(img => img.trim() !== ''),
-          category: category ? category.name : 'Uncategorized',
-          categorySlug: data.categorySlug,
-          brand: data.brand,
-          stockStatus: data.stockStatus,
-          rating: 0, 
-          reviewCount: 0, 
-          features: data.features.map(f => f.value).filter(f => f.trim() !== ''),
-          specifications: data.specifications.reduce((acc, spec) => {
-            if (spec.key && spec.value) {
-              acc[spec.key] = spec.value;
-            }
-            return acc;
-          }, {}),
-        };
-
-        await addDoc(productsCollection, newProduct);
+        // In a real app, you would send this data to your backend/API to save the product
+        console.log("New product data:", data);
 
         toast({
             title: 'Product Added!',

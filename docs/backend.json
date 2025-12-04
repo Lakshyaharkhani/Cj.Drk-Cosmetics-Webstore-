@@ -1,50 +1,7 @@
+
 {
-  "entities": {
-    "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Product",
-      "type": "object",
-      "description": "Represents a product in the store.",
-      "properties": {
-        "name": { "type": "string", "description": "Name of the product." },
-        "price": { "type": "number", "description": "Price of the product." },
-        "originalPrice": { "type": "number", "description": "Original price before discount." },
-        "description": { "type": "string", "description": "Detailed description of the product." },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "URLs of the product's images." },
-        "category": { "type": "string", "description": "Category name." },
-        "categorySlug": { "type": "string", "description": "URL-friendly slug for the category." },
-        "brand": { "type": "string", "description": "Brand of the product." },
-        "stockStatus": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] },
-        "rating": { "type": "number", "description": "Average customer rating." },
-        "reviewCount": { "type": "number", "description": "Number of customer reviews." },
-        "features": { "type": "array", "items": { "type": "string" }, "description": "Key features of the product." },
-        "specifications": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Technical specifications of the product." }
-      },
-      "required": ["name", "price", "description", "images", "category", "categorySlug", "brand", "stockStatus", "rating", "reviewCount"]
-    }
-  },
+  "entities": {},
   "auth": {
     "providers": ["anonymous"]
-  },
-  "firestore": {
-    "structure": [
-      {
-        "path": "/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores product information.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "Unique identifier for the product."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "A simple top-level 'products' collection is created to store all product data. This flat structure is easy for Rowy to connect to and manage. Each document in the collection will represent one product, matching the schema defined in the entities."
   }
 }

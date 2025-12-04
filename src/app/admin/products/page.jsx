@@ -10,35 +10,23 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import Link from 'next/link';
-import { useCollection, useMemoFirebase } from '../../../firebase';
-import { collection, deleteDoc, doc } from 'firebase/firestore';
-import { useFirestore } from '../../../firebase/provider';
+import { getProducts } from '../../../lib/data';
 import { useToast } from '../../../hooks/use-toast';
 
 export default function AdminProductsPage() {
-  const firestore = useFirestore();
-  const productsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
-  const { data: products, isLoading } = useCollection(productsQuery);
+  const [products, setProducts] = useState(getProducts());
   const { toast } = useToast();
+  const isLoading = false;
 
-  const handleDelete = async (productId, productName) => {
-    if (confirm(`Are you sure you want to delete "${productName}"?`)) {
-      try {
-        await deleteDoc(doc(firestore, 'products', productId));
-        toast({
-          title: 'Product Deleted',
-          description: `"${productName}" has been successfully deleted.`,
-        });
-      } catch (error) {
-        toast({
-          title: 'Error Deleting Product',
-          description: error.message,
-          variant: 'destructive',
-        });
-      }
+  const handleDelete = (productId, productName) => {
+    if (confirm(`Are you sure you want to delete "${productName}"? This cannot be undone.`)) {
+      // In a real app, you would make an API call to delete the product
+      const updatedProducts = products.filter(p => p.id !== productId);
+      setProducts(updatedProducts);
+      toast({
+        title: 'Product Deleted',
+        description: `"${productName}" has been successfully deleted.`,
+      });
     }
   };
 

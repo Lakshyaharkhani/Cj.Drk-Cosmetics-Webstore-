@@ -6,25 +6,15 @@ import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../components/ui/carousel';
-import { getCategories } from '../lib/data';
+import { getCategories, getProducts } from '../lib/data';
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';
-import { useCollection, useMemoFirebase } from '../firebase';
-import { collection, query, limit } from 'firebase/firestore';
-import { useFirestore } from '../firebase/provider';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
 
 export default function Home() {
   const categories = getCategories();
-  const firestore = useFirestore();
-  
-  const featuredProductsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    const productsCollection = collection(firestore, 'products');
-    return query(productsCollection, limit(8));
-  }, [firestore]);
-
-  const { data: featuredProducts, isLoading } = useCollection(featuredProductsQuery);
+  const featuredProducts = getProducts().slice(0, 8);
+  const isLoading = false; // Data is loaded synchronously
 
   return (
     <div className="space-y-16 pb-16">
