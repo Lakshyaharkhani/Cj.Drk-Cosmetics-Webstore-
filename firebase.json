@@ -16,5 +16,8 @@
       "**/.git/**",
       "**/.env"
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
