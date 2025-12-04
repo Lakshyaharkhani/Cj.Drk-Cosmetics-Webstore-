@@ -1,13 +1,9 @@
-
-import { getProductById, getProducts } from '@/lib/data';
+import { getProductById } from '../../../lib/data';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { Star } from 'lucide-react';
-import { Badge } from '../../../components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
-import ProductCard from '../../../components/ProductCard';
-import RelatedProducts from '../../../components/RelatedProducts';
 import ProductDetails from '../../../components/ProductDetails';
+import { Star } from 'lucide-react';
 
 export default function ProductPage({ params }) {
   const product = getProductById(params.id);
@@ -15,8 +11,6 @@ export default function ProductPage({ params }) {
   if (!product) {
     notFound();
   }
-
-  const otherProducts = getProducts().filter(p => p.id !== product.id && p.categorySlug === product.categorySlug).slice(0, 4);
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -78,12 +72,6 @@ export default function ProductPage({ params }) {
                 </AccordionContent>
             </AccordionItem>
         </Accordion>
-      </div>
-
-      {/* Related Products Section */}
-      <div className="mt-16">
-        <h3 className="font-headline text-3xl mb-8">You Might Also Like</h3>
-        <RelatedProducts productDescription={product.description} productCategory={product.category} currentProductId={product.id} />
       </div>
 
        {/* Customer Reviews Section */}
