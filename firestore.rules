@@ -1,28 +1,159 @@
 rules_version = '2';
 
+/**
+ * This ruleset enforces a security model with a clear separation between public
+ * catalog data and private user data for an e-commerce application.
+ *
+ * Core Philosophy:
+ * The rules are designed to be secure by default. Publicly accessible data, such
+ * as products and vendors, is read-only for all users. Private data, such as
+ * customer profiles and orders, is strictly controlled, ensuring a user can only
+ * access their own information. Writes to catalog data are disabled pending the
+ * implementation of an administrative role system.
+ *
+ * Data Structure:
+ * The data is organized into five top-level collections: /products, /vendors,
+ * /customers, /orders, and /order_items. Relationships are maintained through
+ * ID fields (e.g., an 'Order' document contains a 'customerId' field). Customer
+ * data is stored in /customers/{userId}, where the document ID matches the user's
+ * Firebase Authentication UID.
+ *
+ * Key Security Decisions:
+ * - Public Catalog, Secure Writes: /products and /vendors are publicly readable
+ *   to allow browsing, but all write operations are denied until an admin or
+ *   vendor role system is defined. This prevents unauthorized modification of
+ *   the store's catalog.
+ * - Strict User Ownership: The /customers, /orders, and /order_items collections
+ *   are private. Access is strictly limited to the authenticated user who owns
+ *   the data, identified by their UID.
+ * - No Public User Listing: Listing all documents in the /customers, /orders,
+ *   or /order_items collections is explicitly forbidden to protect user privacy
+ *   and prevent data scraping. Clients must perform authenticated, targeted
+ *   queries (e.g., `where('customerId', '==', currentUser.uid)`).
+ *
+ * Denormalization for Authorization:
+ * The rules rely on authorization-critical fields being present on the documents
+ * themselves. For example, the `Order` document must have a `customerId` field.
+ * This avoids complex and slow cross-collection reads for most authorization checks.
+ * A `get()` call is used only where necessary to secure child resources, such as
+ * ensuring an `OrderItem` can only be accessed by the owner of its parent `Order`.
+ *
+ * Structural Segregation:
+ * The architecture naturally separates public data (/products, /vendors) from
+ * private user-specific data (/customers, /orders), which is a secure and
+ * performant pattern.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Default: Deny all reads and writes
-    match /{document=**} {
-      allow read, write: if false;
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // Products: Publicly readable, but not writable
-    // Managed externally via CMS (e.g., Rowy)
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the primary function for checking document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the authenticated user owns the parent Order document.
+     * Used to secure related documents like OrderItems. This function performs a
+     * cross-collection read, which is necessary for this security check.
+     */
+    function isParentOrderOwner(orderId) {
+      return isSignedIn() && get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Publicly readable catalog of products. Writes are currently disabled.
+     * @path /products/{productId}
+     * @allow (get) Any user, signed in or not, can read product details.
+     * @deny (create) Any user attempting to create a new product.
+     * @principle Public read access for catalog data with locked-down writes for security.
+     */
     match /products/{productId} {
-      allow read: if true;
-      allow write: if false;
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // TODO: Implement admin or vendor role-based access.
+      allow update: if false; // TODO: Implement admin or vendor role-based access.
+      allow delete: if false; // TODO: Implement admin or vendor role-based access.
     }
 
-    // Users: Can only read/write their own document
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    /**
+     * @description Publicly readable list of vendors. Writes are currently disabled.
+     * @path /vendors/{vendorId}
+     * @allow (get) Any user, signed in or not, can read vendor details.
+     * @deny (create) Any user attempting to create a new vendor.
+     * @principle Public read access for catalog data with locked-down writes for security.
+     */
+    match /vendors/{vendorId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // TODO: Implement admin or vendor role-based access.
+      allow update: if false; // TODO: Implement admin or vendor role-based access.
+      allow delete: if false; // TODO: Implement admin or vendor role-based access.
     }
 
-    // Orders: Can only read/write their own orders
+    /**
+     * @description A customer's private profile, linked to their auth UID.
+     * @path /customers/{customerId}
+     * @allow (create) A new user creating their own customer profile for the first time. `auth.uid` must match `customerId`.
+     * @deny (get) An authenticated user trying to read another user's customer profile.
+     * @deny (list) Any user trying to list all customer profiles in the database.
+     * @principle Enforces strict user ownership; a user can only access their own data tree.
+     */
+    match /customers/{customerId} {
+      allow get: if isOwner(customerId);
+      allow list: if false;
+      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
+      allow update: if isOwner(customerId) && resource != null && request.resource.data.id == resource.data.id;
+      allow delete: if isOwner(customerId) && resource != null;
+    }
+
+    /**
+     * @description A customer's private order information.
+     * @path /orders/{orderId}
+     * @allow (get) An authenticated user reading one of their own orders.
+     * @deny (get) An authenticated user trying to read another user's order.
+     * @deny (list) Any user trying to list all orders in the database. Client must use a targeted query.
+     * @principle Enforces document ownership via a `customerId` field within the document.
+     */
     match /orders/{orderId} {
-       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow get: if isSignedIn() && resource.data.customerId == request.auth.uid;
+      allow list: if false; // Deny general listing; client must query with where('customerId', '==', auth.uid).
+      allow create: if isSignedIn() && request.resource.data.customerId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.customerId == request.auth.uid && request.resource.data.customerId == resource.data.customerId;
+      allow delete: if isSignedIn() && resource != null && resource.data.customerId == request.auth.uid;
+    }
+
+    /**
+     * @description Individual items within a customer's private order.
+     * @path /order_items/{orderItemId}
+     * @allow (get) A user reading an item that belongs to one of their own orders.
+     * @deny (get) A user trying to read an item from someone else's order.
+     * @deny (list) Any user trying to list all order items. This is a critical privacy protection.
+     * @principle Secures a child resource by checking ownership of its parent document using `get()`.
+     */
+    match /order_items/{orderItemId} {
+      allow get: if isSignedIn() && resource != null && isParentOrderOwner(resource.data.orderId);
+      allow list: if false;
+      allow create: if isSignedIn() && isParentOrderOwner(request.resource.data.orderId);
+      allow update: if isSignedIn() && resource != null && isParentOrderOwner(resource.data.orderId) && request.resource.data.orderId == resource.data.orderId;
+      allow delete: if isSignedIn() && resource != null && isParentOrderOwner(resource.data.orderId);
     }
   }
 }
