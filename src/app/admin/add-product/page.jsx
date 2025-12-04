@@ -11,9 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../../components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { useToast } from '../../../hooks/use-toast';
-import { getCategories } from '../../../lib/data';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, doc } from 'firebase/firestore';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
@@ -33,7 +35,10 @@ const productSchema = z.object({
 
 export default function AdminProductUploadPage() {
   const { toast } = useToast();
-  const categories = getCategories();
+  const firestore = useFirestore();
+
+  const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
+  const { data: categories } = useCollection(categoriesRef);
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -69,8 +74,23 @@ export default function AdminProductUploadPage() {
 
   const onSubmit = async (data) => {
     try {
-        // In a real app, you would send this data to your backend/API to save the product
-        console.log("New product data:", data);
+        const productsRef = collection(firestore, 'products');
+        const categoryDoc = categories?.find(c => c.slug === data.categorySlug);
+
+        const productData = {
+          ...data,
+          category: categoryDoc ? categoryDoc.name : 'Uncategorized',
+          features: data.features.map(f => f.value),
+          specifications: data.specifications.reduce((acc, spec) => {
+            acc[spec.key] = spec.value;
+            return acc;
+          }, {}),
+          rating: 0, // Initial rating
+          reviewCount: 0, // Initial review count
+          createdAt: new Date(),
+        };
+
+        await addDocumentNonBlocking(productsRef, productData);
 
         toast({
             title: 'Product Added!',
@@ -128,7 +148,7 @@ export default function AdminProductUploadPage() {
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
                             <SelectContent>
-                                {categories.map(cat => (
+                                {categories?.map(cat => (
                                     <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
                                 ))}
                             </SelectContent>

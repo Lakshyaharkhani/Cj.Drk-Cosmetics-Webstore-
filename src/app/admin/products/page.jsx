@@ -10,23 +10,32 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import Link from 'next/link';
-import { getProducts } from '../../../lib/data';
 import { useToast } from '../../../hooks/use-toast';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState(getProducts());
   const { toast } = useToast();
-  const isLoading = false;
+  const firestore = useFirestore();
+  const productsRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: products, isLoading } = useCollection(productsRef);
+
 
   const handleDelete = (productId, productName) => {
     if (confirm(`Are you sure you want to delete "${productName}"? This cannot be undone.`)) {
-      // In a real app, you would make an API call to delete the product
-      const updatedProducts = products.filter(p => p.id !== productId);
-      setProducts(updatedProducts);
-      toast({
-        title: 'Product Deleted',
-        description: `"${productName}" has been successfully deleted.`,
-      });
+      const docRef = doc(firestore, 'products', productId);
+      deleteDoc(docRef).then(() => {
+        toast({
+          title: 'Product Deleted',
+          description: `"${productName}" has been successfully deleted.`,
+        });
+      }).catch(error => {
+         toast({
+          title: 'Error Deleting Product',
+          description: error.message,
+          variant: 'destructive',
+        });
+      })
     }
   };
 

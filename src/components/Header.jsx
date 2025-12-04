@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -6,7 +5,6 @@ import { ShoppingCart, Search, Menu, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useCart } from '../context/CartContext';
-import { getCategories } from '../lib/data';
 import {
   Sheet,
   SheetContent,
@@ -14,14 +12,19 @@ import {
 } from "./ui/sheet"
 import { useState } from 'react';
 import { Separator } from './ui/separator';
+import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
+import { collection } from 'firebase/firestore';
 
 export default function Header() {
   const { cartCount } = useCart();
-  const categories = getCategories();
+  const firestore = useFirestore();
+  const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
+  const { data: categories } = useCollection(categoriesRef);
+
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const NavLinks = () => (
-    categories.map((category) => (
+    categories?.map((category) => (
       <Button variant="ghost" asChild key={category.id}>
         <Link href={`/products?category=${category.slug}`} onClick={() => setSheetOpen(false)}>
           {category.name}

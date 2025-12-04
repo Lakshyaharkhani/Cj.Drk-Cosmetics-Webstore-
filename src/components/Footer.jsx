@@ -1,12 +1,19 @@
+
 'use client';
 
 import Link from 'next/link';
-import { getPolicies, getCategories } from '../lib/data';
 import { useState, useEffect } from 'react';
+import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
+import { collection } from 'firebase/firestore';
 
 export default function Footer() {
-    const policies = getPolicies();
-    const categories = getCategories();
+    const firestore = useFirestore();
+    const policiesRef = useMemoFirebase(() => firestore ? collection(firestore, 'policies') : null, [firestore]);
+    const { data: policies } = useCollection(policiesRef);
+
+    const categoriesRef = useMemoFirebase(() => firestore ? collection(firestore, 'categories') : null, [firestore]);
+    const { data: categories } = useCollection(categoriesRef);
+
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
@@ -23,7 +30,7 @@ export default function Footer() {
         <div>
           <h3 className="font-headline text-lg mb-4">Shop</h3>
           <ul className="space-y-2 text-sm">
-            {categories.map(category => (
+            {categories?.map(category => (
                  <li key={category.id}><Link href={`/products?category=${category.slug}`} className="hover:text-primary transition-colors">{category.name}</Link></li>
             ))}
           </ul>
@@ -31,7 +38,7 @@ export default function Footer() {
         <div>
           <h3 className="font-headline text-lg mb-4">Information</h3>
           <ul className="space-y-2 text-sm">
-            {policies.map(policy => (
+            {policies?.map(policy => (
                 <li key={policy.slug}>
                     <Link href={`/policy/${policy.slug}`} className="hover:text-primary transition-colors">{policy.title}</Link>
                 </li>

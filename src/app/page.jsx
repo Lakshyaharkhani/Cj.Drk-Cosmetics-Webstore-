@@ -6,15 +6,20 @@ import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../components/ui/carousel';
-import { getCategories, getProducts } from '../lib/data';
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, limit, query } from 'firebase/firestore';
 
 export default function Home() {
-  const categories = getCategories();
-  const featuredProducts = getProducts().slice(0, 8);
-  const isLoading = false; // Data is loaded synchronously
+  const firestore = useFirestore();
+
+  const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
+  const { data: categories } = useCollection(categoriesRef);
+
+  const productsQuery = useMemoFirebase(() => query(collection(firestore, 'products'), limit(8)), [firestore]);
+  const { data: featuredProducts, isLoading } = useCollection(productsQuery);
 
   return (
     <div className="space-y-16 pb-16">
@@ -83,7 +88,7 @@ export default function Home() {
       <section className="container mx-auto px-4">
         <h2 className="font-headline text-4xl mb-8 text-center">Shop by Category</h2>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
+          {categories?.map((category) => (
             <Link key={category.id} href={`/products?category=${category.slug}`} className="group">
               <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                 <CardContent className="p-0">

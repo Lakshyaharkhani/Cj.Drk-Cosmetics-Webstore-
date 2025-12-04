@@ -6,16 +6,17 @@ import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import ProductDetails from '../../../components/ProductDetails';
 import { Star } from 'lucide-react';
-import { getProductById } from '../../../lib/data';
 import ProductLoadingPage from './loading';
+import { useDoc, useFirestore, useMemoFirebase } from '../../../firebase';
+import { doc } from 'firebase/firestore';
 
 export default function ProductPage() {
   const params = useParams();
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const product = getProductById(productId);
+  const firestore = useFirestore();
 
-  // In a real app, you might have a loading state
-  const isLoading = false;
+  const productRef = useMemoFirebase(() => productId ? doc(firestore, 'products', productId) : null, [firestore, productId]);
+  const { data: product, isLoading } = useDoc(productRef);
 
   if (isLoading) {
     return <ProductLoadingPage />;
@@ -97,7 +98,7 @@ export default function ProductPage() {
                 </div>
                 <p className="text-muted-foreground">Based on {product.reviewCount} reviews</p>
             </div>
-            {/* Mock Reviews */}
+            {/* Mock Reviews - In a real app, these would come from Firestore */}
             <div className="space-y-6">
                 <div className="border-t pt-6">
                     <div className="flex items-center mb-2">

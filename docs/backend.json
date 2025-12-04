@@ -1,7 +1,69 @@
 
 {
-  "entities": {},
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "An item available for sale in the store.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "description": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "category": { "type": "string" },
+        "categorySlug": { "type": "string" },
+        "brand": { "type": "string" },
+        "stockStatus": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "specifications": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "price", "description", "images", "category", "categorySlug", "brand", "stockStatus", "createdAt"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "A category for organizing products.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "image": { "type": "string", "format": "uri" }
+      },
+      "required": ["name", "slug", "image"]
+    },
+    "Policy": {
+        "title": "Policy",
+        "description": "A store policy document, like Terms of Service or Privacy Policy.",
+        "type": "object",
+        "properties": {
+            "title": { "type": "string" },
+            "slug": { "type": "string" },
+            "lastUpdated": { "type": "string" },
+            "content": { "type": "string" }
+        },
+        "required": ["title", "slug", "content"]
+    }
+  },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": [
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Stores all product details."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Stores product categories."
+    },
+    "/policies/{policyId}": {
+        "schema": { "$ref": "#/entities/Policy" },
+        "description": "Stores the legal and informational policies for the store."
+    }
   }
 }
