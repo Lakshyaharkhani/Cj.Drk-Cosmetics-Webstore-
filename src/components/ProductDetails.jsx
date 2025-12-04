@@ -4,8 +4,8 @@
 import { useState } from 'react';
 import { Star, Minus, Plus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 import { useRouter } from 'next/navigation';
 
 export default function ProductDetails({ product }) {

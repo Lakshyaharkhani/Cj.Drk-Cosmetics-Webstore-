@@ -4,11 +4,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 import { Minus, Plus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
+import { Separator } from '../../components/ui/separator';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, cartTotal, cartCount } = useCart();

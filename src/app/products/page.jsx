@@ -1,5 +1,5 @@
 
-import ProductGrid from '@/components/ProductGrid';
+import ProductGrid from '../../components/ProductGrid';
 import { getProducts, getCategories } from '@/lib/data';
 
 export default function ProductsPage({

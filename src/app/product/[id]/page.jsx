@@ -3,11 +3,11 @@ import { getProductById, getProducts } from '@/lib/data';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Star } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import ProductCard from '@/components/ProductCard';
-import RelatedProducts from '@/components/RelatedProducts';
-import ProductDetails from '@/components/ProductDetails';
+import { Badge } from '../../../components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
+import ProductCard from '../../../components/ProductCard';
+import RelatedProducts from '../../../components/RelatedProducts';
+import ProductDetails from '../../../components/ProductDetails';
 
 export default function ProductPage({ params }) {
   const product = getProductById(params.id);

@@ -1,9 +1,9 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../components/ui/carousel';
 import { getProducts, getCategories } from '@/lib/data';
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';

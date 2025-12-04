@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { ShoppingCart, Search, Menu, User } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { useCart } from '@/context/CartContext';
-import { getCategories } from '@/lib/data';
+import { useCart } from '../context/CartContext';
+import { getCategories } from '../lib/data';
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "./ui/sheet"
 import { useState } from 'react';
 import { Separator } from './ui/separator';
 

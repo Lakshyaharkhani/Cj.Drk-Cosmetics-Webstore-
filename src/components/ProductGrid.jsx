@@ -4,8 +4,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ProductCard from './ProductCard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Slider } from './ui/slider';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
@@ -17,7 +17,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
+} from "./ui/pagination"
 import ProductGridSkeleton from './ProductGridSkeleton';
 
 const PRODUCTS_PER_PAGE = 9;

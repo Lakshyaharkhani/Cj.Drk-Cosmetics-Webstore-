@@ -1,9 +1,9 @@
 
 'use client';
 import { CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../../components/ui/button';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { useState, useEffect } from 'react';
 
 export default function OrderConfirmationPage() {
