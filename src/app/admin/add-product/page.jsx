@@ -1,19 +1,21 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { getCategories } from '@/lib/data';
-import { addProductAction } from '../actions';
+import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { Textarea } from '../../../components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../../components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../../components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
+import { useToast } from '../../../hooks/use-toast';
+import { getCategories } from '../../../lib/data';
 import { PlusCircle, Trash2 } from 'lucide-react';
 import React from 'react';
+import { useFirestore } from '../../../firebase/provider';
+import { collection, addDoc } from 'firebase/firestore';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
@@ -34,6 +36,8 @@ const productSchema = z.object({
 export default function AdminProductUploadPage() {
   const { toast } = useToast();
   const categories = getCategories();
+  const firestore = useFirestore();
+  const productsCollection = collection(firestore, 'products');
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -69,7 +73,32 @@ export default function AdminProductUploadPage() {
 
   const onSubmit = async (data) => {
     try {
-        await addProductAction(data);
+      const categoriesData = getCategories();
+      const category = categoriesData.find(c => c.slug === data.categorySlug);
+        
+        const newProduct = {
+          name: data.name,
+          price: data.price,
+          originalPrice: data.originalPrice || null,
+          description: data.description,
+          images: data.images.filter(img => img.trim() !== ''),
+          category: category ? category.name : 'Uncategorized',
+          categorySlug: data.categorySlug,
+          brand: data.brand,
+          stockStatus: data.stockStatus,
+          rating: 0, 
+          reviewCount: 0, 
+          features: data.features.map(f => f.value).filter(f => f.trim() !== ''),
+          specifications: data.specifications.reduce((acc, spec) => {
+            if (spec.key && spec.value) {
+              acc[spec.key] = spec.value;
+            }
+            return acc;
+          }, {}),
+        };
+
+        await addDoc(productsCollection, newProduct);
+
         toast({
             title: 'Product Added!',
             description: `${data.name} has been successfully added.`,
@@ -82,7 +111,7 @@ export default function AdminProductUploadPage() {
     } catch (error) {
         toast({
             title: 'Error',
-            description: 'Failed to add the product. Please try again.',
+            description: error.message || 'Failed to add the product. Please try again.',
             variant: 'destructive',
         });
         console.error(error);

@@ -1,16 +1,25 @@
 
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../components/ui/carousel';
-import { getProducts, getCategories } from '../lib/data';
+import { getCategories } from '../lib/data';
 import ProductCard from '../components/ProductCard';
 import { ArrowRight } from 'lucide-react';
+import { useCollection } from '../firebase';
+import { collection, query, limit } from 'firebase/firestore';
+import { useFirestore } from '../firebase/provider';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
 
 export default function Home() {
-  const featuredProducts = getProducts().slice(0, 8);
   const categories = getCategories();
+  const firestore = useFirestore();
+  const productsCollection = collection(firestore, 'products');
+  const featuredProductsQuery = query(productsCollection, limit(8));
+  const { data: featuredProducts, isLoading } = useCollection(featuredProductsQuery);
 
   return (
     <div className="space-y-16 pb-16">
@@ -55,7 +64,14 @@ export default function Home() {
           className="w-full"
         >
           <CarouselContent>
-            {featuredProducts.map((product) => (
+            {isLoading && [...Array(4)].map((_,i) => (
+              <CarouselItem key={i} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                <div className="p-1 h-full">
+                  <ProductCardSkeleton />
+                </div>
+              </CarouselItem>
+            ))}
+            {featuredProducts?.map((product) => (
               <CarouselItem key={product.id} className="md:basis-1/2 lg:basis-1/3 xl:basis-1/4">
                 <div className="p-1 h-full">
                   <ProductCard product={product} />

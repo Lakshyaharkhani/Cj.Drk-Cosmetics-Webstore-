@@ -4,241 +4,27 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
-      "description": "Represents a product in the ElectroCart store.",
+      "description": "Represents a product in the store.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the product entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the product."
-        },
-        "description": {
-          "type": "string",
-          "description": "Detailed description of the product."
-        },
-        "price": {
-          "type": "number",
-          "description": "Price of the product."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the product's image.",
-          "format": "uri"
-        },
-        "category": {
-          "type": "string",
-          "description": "Category the product belongs to (e.g., TWS Earbuds, Power Banks)."
-        },
-        "specifications": {
-          "type": "string",
-          "description": "JSON string containing product specifications."
-        },
-        "stockQuantity": {
-          "type": "number",
-          "description": "Number of units currently in stock."
-        },
-        "discountPercentage": {
-          "type": "number",
-          "description": "Discount percentage applied to the product (e.g., 0.2 for 20%)."
-        },
-        "vendorId": {
-          "type": "string",
-          "description": "Reference to Vendor. (Relationship: Vendor 1:N Product)"
-        },
-        "tags": {
-          "type": "array",
-          "description": "tags related to this product",
-          "items": {
-            "type": "string"
-          }
-        }
+        "name": { "type": "string", "description": "Name of the product." },
+        "price": { "type": "number", "description": "Price of the product." },
+        "originalPrice": { "type": "number", "description": "Original price before discount." },
+        "description": { "type": "string", "description": "Detailed description of the product." },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" }, "description": "URLs of the product's images." },
+        "category": { "type": "string", "description": "Category name." },
+        "categorySlug": { "type": "string", "description": "URL-friendly slug for the category." },
+        "brand": { "type": "string", "description": "Brand of the product." },
+        "stockStatus": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] },
+        "rating": { "type": "number", "description": "Average customer rating." },
+        "reviewCount": { "type": "number", "description": "Number of customer reviews." },
+        "features": { "type": "array", "items": { "type": "string" }, "description": "Key features of the product." },
+        "specifications": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Technical specifications of the product." }
       },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "price",
-        "imageUrl",
-        "category",
-        "specifications",
-        "stockQuantity",
-        "vendorId"
-      ]
-    },
-    "Vendor": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Vendor",
-      "type": "object",
-      "description": "Represents a vendor selling products on ElectroCart.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the vendor entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the vendor."
-        },
-        "contactEmail": {
-          "type": "string",
-          "description": "Email address for contacting the vendor.",
-          "format": "email"
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "Phone number of the vendor."
-        },
-        "address": {
-          "type": "string",
-          "description": "Address of the vendor."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "contactEmail",
-        "phoneNumber",
-        "address"
-      ]
-    },
-    "Order": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Order",
-      "type": "object",
-      "description": "Represents a customer order.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the order entity."
-        },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to Customer. (Relationship: Customer 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "Date when the order was placed.",
-          "format": "date-time"
-        },
-        "totalAmount": {
-          "type": "number",
-          "description": "Total amount of the order."
-        },
-        "shippingAddress": {
-          "type": "string",
-          "description": "Shipping address for the order."
-        },
-        "billingAddress": {
-          "type": "string",
-          "description": "Billing address for the order."
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the order (e.g., pending, processing, shipped, delivered)."
-        }
-      },
-      "required": [
-        "id",
-        "customerId",
-        "orderDate",
-        "totalAmount",
-        "shippingAddress",
-        "billingAddress",
-        "status"
-      ]
-    },
-    "OrderItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "OrderItem",
-      "type": "object",
-      "description": "Represents an item within an order.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the order item entity."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "Quantity of the product in the order item."
-        },
-        "unitPrice": {
-          "type": "number",
-          "description": "Price of one unit of the product at the time of the order."
-        }
-      },
-      "required": [
-        "id",
-        "orderId",
-        "productId",
-        "quantity",
-        "unitPrice"
-      ]
-    },
-    "Customer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Customer",
-      "type": "object",
-      "description": "Represents a customer of ElectroCart.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the customer entity."
-        },
-        "firstName": {
-          "type": "string",
-          "description": "First name of the customer."
-        },
-        "lastName": {
-          "type": "string",
-          "description": "Last name of the customer."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the customer.",
-          "format": "email"
-        },
-        "phoneNumber": {
-          "type": "string",
-          "description": "Phone number of the customer."
-        },
-        "shippingAddresses": {
-          "type": "array",
-          "description": "Shipping addresses of the customer.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "billingAddress": {
-          "type": "string",
-          "description": "Billing address of the customer."
-        }
-      },
-      "required": [
-        "id",
-        "firstName",
-        "lastName",
-        "email",
-        "phoneNumber",
-        "shippingAddresses",
-        "billingAddress"
-      ]
+      "required": ["name", "price", "description", "images", "category", "categorySlug", "brand", "stockStatus", "rating", "reviewCount"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["anonymous"]
   },
   "firestore": {
     "structure": [
@@ -249,7 +35,7 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Stores product information for ElectroCart.",
+          "description": "Stores product information.",
           "params": [
             {
               "name": "productId",
@@ -257,72 +43,8 @@
             }
           ]
         }
-      },
-      {
-        "path": "/vendors/{vendorId}",
-        "definition": {
-          "entityName": "Vendor",
-          "schema": {
-            "$ref": "#/backend/entities/Vendor"
-          },
-          "description": "Stores vendor information.",
-          "params": [
-            {
-              "name": "vendorId",
-              "description": "Unique identifier for the vendor."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores order information.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/order_items/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Stores order item information.",
-          "params": [
-            {
-              "name": "orderItemId",
-              "description": "Unique identifier for the order item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}",
-        "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores customer information.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "Unique identifier for the customer."
-            }
-          ]
-        }
       }
     ],
-    "reasoning": "Given the requirements for an ad-driven electronics sales platform (ElectroCart), the Firestore structure is designed for simplicity and efficiency. The focus is on enabling rowy to fetch data seamlessly. This data structure prioritizes ease of data retrieval and management via rowy.\n\n*   **Products**: Products are stored in a top-level `/products` collection. Each product document contains all necessary information, including vendorId. No denormalization of vendor data into products is performed as it is assumed rowy can handle joining or related data in its UI. The data structure assumes no ownership based security rules, as the user story primarily focuses on showcasing items for rowy to manage.\n*   **Vendors**: Vendors are stored in a top-level `/vendors` collection, and are referenced by `vendorId` in the products collection.\n*   **Customers**: Customers are stored in the top-level `/customers` collection. This collection is separated from auth and can contain additional profile information.\n*   **Orders**: Orders are stored in the top-level `/orders` collection and are associated with customers via the `customerId` field.\n*   **OrderItems**: OrderItems are stored in the top-level `/order_items` collection, referencing both orders and products.\n\nThis data structure focuses on basic data storage for ElectroCart and facilitates the use of rowy to show the data efficiently, rather than complex relationships or security rules."
+    "reasoning": "A simple top-level 'products' collection is created to store all product data. This flat structure is easy for Rowy to connect to and manage. Each document in the collection will represent one product, matching the schema defined in the entities."
   }
 }

@@ -1,21 +1,43 @@
+
 'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
 import { MoreHorizontal, PlusCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getProducts } from '@/lib/data';
+import { Badge } from '../../../components/ui/badge';
+import { Button } from '../../../components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../../../components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../components/ui/table';
 import Link from 'next/link';
+import { useCollection } from '../../../firebase';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
+import { useFirestore } from '../../../firebase/provider';
+import { useToast } from '../../../hooks/use-toast';
 
 export default function AdminProductsPage() {
-  // For now, we'll get products from the local data file.
-  // This will be replaced with a Firebase query.
-  const products = getProducts();
-  
+  const firestore = useFirestore();
+  const { data: products, isLoading } = useCollection(collection(firestore, 'products'));
+  const { toast } = useToast();
+
+  const handleDelete = async (productId, productName) => {
+    if (confirm(`Are you sure you want to delete "${productName}"?`)) {
+      try {
+        await deleteDoc(doc(firestore, 'products', productId));
+        toast({
+          title: 'Product Deleted',
+          description: `"${productName}" has been successfully deleted.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error Deleting Product',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -49,7 +71,12 @@ export default function AdminProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map(product => (
+            {isLoading && (
+              <TableRow>
+                <TableCell colSpan="6" className="text-center">Loading products...</TableCell>
+              </TableRow>
+            )}
+            {products?.map(product => (
               <TableRow key={product.id}>
                 <TableCell className="hidden sm:table-cell">
                   <Image
@@ -79,7 +106,7 @@ export default function AdminProductsPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDelete(product.id, product.name)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -90,7 +117,7 @@ export default function AdminProductsPage() {
       </CardContent>
       <CardFooter>
         <div className="text-xs text-muted-foreground">
-          Showing <strong>1-{products.length}</strong> of <strong>{products.length}</strong> products
+          Showing <strong>1-{products?.length || 0}</strong> of <strong>{products?.length || 0}</strong> products
         </div>
       </CardFooter>
     </Card>

@@ -1,15 +1,20 @@
 
+'use client';
 import ProductGrid from '../../components/ProductGrid';
-import { getProducts, getCategories } from '../../lib/data';
+import { getCategories } from '../../lib/data';
+import { useCollection } from '../../firebase';
+import { collection } from 'firebase/firestore';
+import { useFirestore } from '../../firebase/provider';
+
 
 export default function ProductsPage({
   searchParams,
 }) {
-  const products = getProducts();
+  const firestore = useFirestore();
+  const { data: products, isLoading } = useCollection(collection(firestore, 'products'));
   const categories = getCategories();
 
   const selectedCategory = searchParams.category || 'all';
-  const page = searchParams.page || '1';
 
   const categoryName = selectedCategory === 'all'
     ? 'All Products'
@@ -20,7 +25,7 @@ export default function ProductsPage({
       <h1 className="font-headline text-4xl mb-8">
         {categoryName}
       </h1>
-      <ProductGrid allProducts={products} allCategories={categories} />
+      <ProductGrid allProducts={products || []} allCategories={categories} isLoading={isLoading}/>
     </div>
   );
 }

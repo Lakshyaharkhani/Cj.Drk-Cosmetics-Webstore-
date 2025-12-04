@@ -1,12 +1,24 @@
-import { getProductById } from '../../../lib/data';
+
+'use client';
+
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import ProductDetails from '../../../components/ProductDetails';
 import { Star } from 'lucide-react';
+import { useDoc } from '../../../firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '../../../firebase/provider';
+import ProductLoadingPage from './loading';
 
 export default function ProductPage({ params }) {
-  const product = getProductById(params.id);
+  const firestore = useFirestore();
+  const productRef = doc(firestore, 'products', params.id);
+  const { data: product, isLoading } = useDoc(productRef);
+
+  if (isLoading) {
+    return <ProductLoadingPage />;
+  }
 
   if (!product) {
     notFound();

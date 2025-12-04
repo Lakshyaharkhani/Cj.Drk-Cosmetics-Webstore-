@@ -12,7 +12,6 @@ import { Button } from './ui/button';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -22,7 +21,7 @@ import ProductGridSkeleton from './ProductGridSkeleton';
 
 const PRODUCTS_PER_PAGE = 9;
 
-export default function ProductGrid({ allProducts, allCategories }) {
+export default function ProductGrid({ allProducts, allCategories, isLoading }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -30,12 +29,7 @@ export default function ProductGrid({ allProducts, allCategories }) {
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'popularity');
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const selectedCategory = searchParams.get('category') || 'all';
   const currentPage = Number(searchParams.get('page')) || 1;
 
@@ -61,7 +55,7 @@ export default function ProductGrid({ allProducts, allCategories }) {
         products.sort((a, b) => a.price - b.price);
         break;
       case 'price-desc':
-        products.sort((a, b) => b.price - a.price);
+        products.sort((a, b) => b.price - b.price);
         break;
       case 'rating':
         products.sort((a, b) => b.rating - a.rating);
@@ -109,7 +103,7 @@ export default function ProductGrid({ allProducts, allCategories }) {
 
   const maxPrice = Math.max(...allProducts.map(p => p.price), 2000);
 
-  if (!isClient) {
+  if (isLoading) {
     return (
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
             <aside className="lg:col-span-1">
