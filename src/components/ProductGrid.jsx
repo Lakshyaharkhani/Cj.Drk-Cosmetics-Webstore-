@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ProductCard from './ProductCard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import ProductGridSkeleton from './ProductGridSkeleton';
 
 const PRODUCTS_PER_PAGE = 9;
 
@@ -29,7 +30,12 @@ export default function ProductGrid({ allProducts, allCategories }) {
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'popularity');
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const selectedCategory = searchParams.get('category') || 'all';
   const currentPage = Number(searchParams.get('page')) || 1;
 
@@ -102,6 +108,19 @@ export default function ProductGrid({ allProducts, allCategories }) {
   }
 
   const maxPrice = Math.max(...allProducts.map(p => p.price), 2000);
+
+  if (!isClient) {
+    return (
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
+            <aside className="lg:col-span-1">
+                <ProductGridSkeleton.Filters />
+            </aside>
+            <main className="lg:col-span-3">
+                <ProductGridSkeleton.Grid />
+            </main>
+        </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">

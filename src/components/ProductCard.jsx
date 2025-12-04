@@ -10,10 +10,17 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import { useCart } from '@/context/CartContext';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
+import ProductCardSkeleton from './ProductCardSkeleton';
+
 
 export default function ProductCard({ product }) {
     const { addToCart } = useCart();
     const [isLoading, setIsLoading] = useState(true);
+
+  if (!product) {
+    return <ProductCardSkeleton />;
+  }
+  
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <CardHeader className="p-0">
@@ -30,6 +37,7 @@ export default function ProductCard({ product }) {
               isLoading ? 'opacity-0' : 'opacity-100'
             )}
             onLoad={() => setIsLoading(false)}
+            loading="lazy"
           />
         </Link>
       </CardHeader>
