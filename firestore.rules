@@ -109,6 +109,21 @@ service cloud.firestore {
     }
 
     /**
+     * @description Publicly readable list of store policies. Writes are currently disabled.
+     * @path /policies/{policyId}
+     * @allow (get, list) Any user, signed in or not, can read policy documents.
+     * @deny (create) Any user attempting to create a new policy.
+     * @principle Public read access for informational content with locked-down writes.
+     */
+    match /policies/{policyId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if false; // TODO: Implement admin or role-based access.
+        allow update: if false; // TODO: Implement admin or role-based access.
+        allow delete: if false; // TODO: Implement admin or role-based access.
+    }
+
+    /**
      * @description Publicly readable list of vendors. Writes are currently disabled.
      * @path /vendors/{vendorId}
      * @allow (get) Any user, signed in or not, can read vendor details.
