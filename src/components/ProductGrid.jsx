@@ -9,6 +9,17 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
+const PRODUCTS_PER_PAGE = 9;
 
 export default function ProductGrid({ allProducts, allCategories }) {
   const router = useRouter();
@@ -18,7 +29,9 @@ export default function ProductGrid({ allProducts, allCategories }) {
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'popularity');
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  
+  const selectedCategory = searchParams.get('category') || 'all';
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   const filteredAndSortedProducts = useMemo(() => {
     let products = allProducts;
@@ -55,17 +68,38 @@ export default function ProductGrid({ allProducts, allCategories }) {
 
     return products;
   }, [allProducts, selectedCategory, inStockOnly, priceRange, sortOption]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredAndSortedProducts.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
   
+  const updateQueryParam = (key, value) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   const handleCategoryChange = (slug) => {
-    setSelectedCategory(slug);
     const params = new URLSearchParams(searchParams.toString());
     if (slug === 'all') {
         params.delete('category');
     } else {
         params.set('category', slug);
     }
+    params.delete('page'); // Reset to first page
     router.push(`${pathname}?${params.toString()}`);
   };
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    updateQueryParam('page', page.toString());
+  }
 
   const maxPrice = Math.max(...allProducts.map(p => p.price), 2000);
 
@@ -90,7 +124,7 @@ export default function ProductGrid({ allProducts, allCategories }) {
               min={0}
               max={maxPrice}
               step={100}
-              value={priceRange}
+              defaultValue={priceRange}
               onValueChange={(value) => setPriceRange(value)}
             />
             <div className="flex justify-between mt-2 text-sm text-muted-foreground">
@@ -125,9 +159,9 @@ export default function ProductGrid({ allProducts, allCategories }) {
           </Select>
         </div>
 
-        {filteredAndSortedProducts.length > 0 ? (
+        {paginatedProducts.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredAndSortedProducts.map(product => (
+                {paginatedProducts.map(product => (
                     <ProductCard key={product.id} product={product} />
                 ))}
             </div>
@@ -135,6 +169,30 @@ export default function ProductGrid({ allProducts, allCategories }) {
             <div className="text-center py-20">
                 <h2 className="font-headline text-2xl">No Products Found</h2>
                 <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
+            </div>
+        )}
+
+        {totalPages > 1 && (
+            <div className="mt-12">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} aria-disabled={currentPage === 1} />
+                        </PaginationItem>
+                        
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink href="#" onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }} isActive={currentPage === i + 1}>
+                                    {i + 1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }} aria-disabled={currentPage === totalPages} />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
         )}
       </main>

@@ -1,26 +1,35 @@
 
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Star, ShoppingCart } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { useCart } from '@/context/CartContext';
+import { Skeleton } from './ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export default function ProductCard({ product }) {
     const { addToCart } = useCart();
+    const [isLoading, setIsLoading] = useState(true);
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       <CardHeader className="p-0">
-        <Link href={`/product/${product.id}`} className="block">
+        <Link href={`/product/${product.id}`} className="block aspect-square relative">
+          {isLoading && <Skeleton className="absolute inset-0" />}
           <Image
             src={product.images[0]}
             alt={product.name}
             data-ai-hint={`${product.category} product`}
-            width={400}
-            height={400}
-            className="aspect-square w-full object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={cn(
+              'object-cover transition-opacity duration-300',
+              isLoading ? 'opacity-0' : 'opacity-100'
+            )}
+            onLoad={() => setIsLoading(false)}
           />
         </Link>
       </CardHeader>
