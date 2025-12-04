@@ -1,0 +1,17 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Default: Deny all reads and writes
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Product Images: Publicly readable, not writable
+    match /product-images/{imageId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
