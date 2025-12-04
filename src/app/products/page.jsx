@@ -1,6 +1,6 @@
 
 import ProductGrid from '../../components/ProductGrid';
-import { getProducts, getCategories } from '@/lib/data';
+import { getProducts, getCategories } from '../../lib/data';
 
 export default function ProductsPage({
   searchParams,

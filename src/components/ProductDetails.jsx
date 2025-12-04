@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Star, Minus, Plus } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '../context/CartContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { useRouter } from 'next/navigation';
