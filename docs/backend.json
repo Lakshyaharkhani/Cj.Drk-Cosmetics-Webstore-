@@ -7,44 +7,60 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
-        "price": { "type": "number" },
-        "originalPrice": { "type": "number" },
         "description": { "type": "string" },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "price": { "type": "number" },
+        "salePrice": { "type": "number" },
         "category": { "type": "string" },
-        "categorySlug": { "type": "string" },
-        "brand": { "type": "string" },
-        "stockStatus": { "type": "string", "enum": ["In Stock", "Low Stock", "Out of Stock"] },
-        "rating": { "type": "number" },
-        "reviewCount": { "type": "number" },
-        "features": { "type": "array", "items": { "type": "string" } },
-        "specifications": { "type": "object" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "sku": { "type": "string" },
+        "inventory": { "type": "number" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "thumbnail": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "draft", "archived"] }
       },
-      "required": ["name", "price", "description", "images", "category", "categorySlug", "brand", "stockStatus", "createdAt"]
+      "required": ["name", "price", "category", "inventory", "status"]
     },
-    "Category": {
-      "title": "Category",
-      "description": "A category for organizing products.",
+    "Order": {
+      "title": "Order",
+      "description": "A customer order.",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "image": { "type": "string", "format": "uri" }
+        "orderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "items": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            },
+            "required": ["productId", "quantity", "price"]
+          }
+        },
+        "total": { "type": "number" },
+        "paymentStatus": { "type": "string" },
+        "orderStatus": { "type": "string" },
+        "shippingAddress": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "slug", "image"]
+      "required": ["orderId", "userId", "items", "total", "paymentStatus", "orderStatus", "createdAt"]
     },
-    "Policy": {
-        "title": "Policy",
-        "description": "A store policy document, like Terms of Service or Privacy Policy.",
+    "User": {
+        "title": "User",
+        "description": "A user profile.",
         "type": "object",
         "properties": {
-            "title": { "type": "string" },
-            "slug": { "type": "string" },
-            "lastUpdated": { "type": "string" },
-            "content": { "type": "string" }
+            "uid": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "name": { "type": "string" },
+            "phone": { "type": "string" },
+            "address": { "type": "object" },
+            "createdAt": { "type": "string", "format": "date-time" }
         },
-        "required": ["title", "slug", "content"]
+        "required": ["uid", "email", "createdAt"]
     }
   },
   "auth": {
@@ -57,13 +73,13 @@
       "schema": { "$ref": "#/entities/Product" },
       "description": "Stores all product details."
     },
-    "/categories/{categoryId}": {
-      "schema": { "$ref": "#/entities/Category" },
-      "description": "Stores product categories."
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Stores customer orders."
     },
-    "/policies/{policyId}": {
-        "schema": { "$ref": "#/entities/Policy" },
-        "description": "Stores the legal and informational policies for the store."
+    "/users/{userId}": {
+        "schema": { "$ref": "#/entities/User" },
+        "description": "Stores user profiles."
     }
   }
 }
