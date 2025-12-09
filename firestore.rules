@@ -3,43 +3,64 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // HELPER FUNCTIONS
+    // Checks if the request is from a logged-in user
+    function isUser() {
+      return request.auth != null && request.auth.uid != null;
+    }
     
-    // Helper function to check if a user is the owner of a document
+    // Checks if the user is the owner of a specific document
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return isUser() && request.auth.uid == userId;
     }
 
-    // Products: Publicly readable, only authenticated users (and by extension, service accounts) can write
+    // Checks if the request is from a service account (e.g., Rowy, Cloud Functions)
+    // Service accounts are authenticated but don't have a user UID.
+    function isServiceAccount() {
+      return request.auth != null && request.auth.uid == null;
+    }
+
+    // Default deny all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // PUBLIC COLLECTIONS
+    // Products, Categories, and Policies are publicly readable.
+    // Writes are allowed by service accounts or any authenticated user.
     match /products/{productId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isUser() || isServiceAccount();
     }
 
-    // Categories: Publicly readable
     match /categories/{categoryId} {
       allow read: if true;
-      allow write: if request.auth != null; // Keep write restricted
-    }
-
-    // Policies: Publicly readable
-    match /policies/{policyId} {
-      allow read: if true;
-      allow write: if request.auth != null; // Keep write restricted
-    }
-
-    // Orders: Only the user who owns the order can read or write it
-    match /orders/{orderId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if isUser() || isServiceAccount();
     }
     
-    // Users: A user can only read and write their own document
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
+    match /policies/{policyId} {
+      allow read: if true;
+      allow write: if isUser() || isServiceAccount();
+    }
+    
+    // USER-SPECIFIC COLLECTIONS
+    // A user can only read and write their own documents.
+    // Service accounts can also access for administrative purposes.
+    match /users/{userId}/{document=**} {
+       allow read, write: if isOwner(userId) || isServiceAccount();
     }
 
-    // Counter for orders, should only be accessible by backend functions
-    match /counters/orderStats {
-      allow read, write: if false; // Accessed by backend Cloud Function
+    // ORDERS
+    // Only the user who owns the order or a service account can read/write.
+    match /orders/{orderId} {
+      allow read, write: if (isUser() && resource.data.userId == request.auth.uid) || isServiceAccount();
+    }
+
+    // COUNTERS & INTERNAL COLLECTIONS
+    // Restricted to service accounts and cloud functions only.
+    match /counters/{counterId} {
+      allow read, write: if isServiceAccount();
     }
   }
 }
