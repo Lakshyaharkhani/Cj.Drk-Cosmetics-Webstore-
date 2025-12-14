@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
@@ -9,6 +10,7 @@ import { Star } from 'lucide-react';
 import ProductLoadingPage from './loading';
 import { useDoc, useFirestore, useMemoFirebase } from '../../../firebase';
 import { doc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function ProductPage() {
   const params = useParams();
@@ -18,12 +20,18 @@ export default function ProductPage() {
   const productRef = useMemoFirebase(() => productId ? doc(firestore, 'products', productId) : null, [firestore, productId]);
   const { data: product, isLoading } = useDoc(productRef);
 
+  const [selectedImage, setSelectedImage] = useState(0);
+
   if (isLoading) {
     return <ProductLoadingPage />;
   }
 
   if (!product) {
     notFound();
+  }
+
+  const handleThumbnailClick = (index) => {
+    setSelectedImage(index);
   }
 
   return (
@@ -33,17 +41,25 @@ export default function ProductPage() {
         <div>
           <div className="aspect-square w-full overflow-hidden rounded-lg border">
             <Image
-              src={product.images[0]}
+              src={product.images[selectedImage]}
               alt={product.name}
               data-ai-hint={`${product.category} product`}
               width={600}
               height={600}
               className="h-full w-full object-cover"
+              key={selectedImage} // Force re-render on image change for transition
             />
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
             {product.images.map((img, index) => (
-              <div key={index} className="aspect-square w-full overflow-hidden rounded-lg border">
+              <div 
+                key={index} 
+                className={cn(
+                  "aspect-square w-full overflow-hidden rounded-lg border-2 cursor-pointer transition-all",
+                  selectedImage === index ? 'border-primary' : 'border-transparent'
+                )}
+                onClick={() => handleThumbnailClick(index)}
+              >
                 <Image
                   src={img}
                   alt={`${product.name} view ${index + 1}`}

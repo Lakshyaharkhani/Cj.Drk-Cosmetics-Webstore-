@@ -4,28 +4,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // HELPER FUNCTIONS
-    // Checks if the request is from a logged-in user (end-user of the app)
+    // Helper function to check if a user is authenticated
     function isUser() {
       return request.auth != null && request.auth.uid != null;
     }
-    
-    // Checks if the user is the owner of a specific document
+
+    // Helper function to check if the authenticated user is the owner of a document
     function isOwner(userId) {
       return isUser() && request.auth.uid == userId;
-    }
-
-    // Checks if the request is from any service account (e.g., Rowy, Cloud Functions)
-    // A service account is authenticated, but its 'uid' is null.
-    function isServiceAccount() {
-      return request.auth != null && request.auth.uid == null;
-    }
-
-    // Default match for any document in the database
-    match /{document=**} {
-      // Allow any service account to read or write any document.
-      // This is the key rule to unblock Rowy.
-      allow read, write: if isServiceAccount();
     }
 
     // PUBLIC COLLECTIONS
@@ -49,7 +35,15 @@ service cloud.firestore {
     // ORDERS
     // A user can only read or write an order if their UID matches the userId on the order document.
     match /orders/{orderId} {
-      allow read, write: if isUser() && resource.data.userId == request.auth.uid;
+      // Allow create if the user is creating an order for themselves
+      allow create: if isUser() && request.resource.data.userId == request.auth.uid;
+      // Allow read, update, delete if the user is the owner of the existing order
+      allow read, update, delete: if isUser() && resource.data.userId == request.auth.uid;
+    }
+
+    // Default deny all other reads/writes
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
