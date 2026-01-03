@@ -8,12 +8,10 @@ const config = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"Playfair Display"', 'serif'],
-        code: ['monospace'],
-      },
       colors: {
+        "primary": "hsl(var(--primary))",
+        "background-light": "#f8f6f6",
+        "background-dark": "#221610",
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -47,16 +45,17 @@ const config = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))',
-        },
+      },
+      fontFamily: {
+        display: ['Manrope', 'sans-serif'],
+        body: ['Manrope', 'sans-serif'],
+        headline: ['Manrope', 'sans-serif'],
       },
       borderRadius: {
-        lg: 'var(--radius)',
+        lg: "0.5rem",
+        xl: "0.75rem",
+        full: "9999px",
+        DEFAULT: "0.375rem",
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },

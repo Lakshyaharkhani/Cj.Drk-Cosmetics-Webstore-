@@ -2,13 +2,13 @@
 import './globals.css';
 import { Toaster } from '../components/ui/toaster';
 import { CartProvider } from '../context/CartContext';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import { FirebaseClientProvider } from '../firebase';
+import NewHeader from '../components/NewHeader';
+import NewFooter from '../components/NewFooter';
 
 export const metadata = {
-  title: 'Cj.Drk',
-  description: 'Your one-stop shop for natural, cold-pressed soaps and cosmetics.',
+  title: "Nature's Essence - Handmade Soaps & Skincare",
+  description: 'Handcrafted organic skincare made with love and intention. Sustainable, ethical, and pure.',
 };
 
 export default function RootLayout({
@@ -19,15 +19,16 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
       </head>
-      <body className="font-body antialiased">
+      <body className="font-display antialiased bg-background-light dark:bg-background-dark text-[#181311] dark:text-[#f4f2f0]">
         <FirebaseClientProvider>
           <CartProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
+            <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+              <NewHeader />
               <main className="flex-grow">{children}</main>
-              <Footer />
+              <NewFooter />
             </div>
             <Toaster />
           </CartProvider>
