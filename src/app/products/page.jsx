@@ -1,7 +1,7 @@
 
 'use client';
 import ProductGrid from '../../components/ProductGrid';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '../../firebase';
 import { collection } from 'firebase/firestore';
 
 
