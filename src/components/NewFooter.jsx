@@ -53,7 +53,7 @@ export default function NewFooter() {
                     <div className="col-span-1 md:col-span-1">
                         <div className="flex items-center gap-2 mb-4">
                             <span className="material-symbols-outlined text-primary text-2xl">spa</span>
-                            <h2 className="text-lg font-bold">Nature's Essence</h2>
+                            <h2 className="text-lg font-bold">Cj.Drk Cosmetic Store</h2>
                         </div>
                         <p className="text-sm text-gray-500 mb-4 leading-relaxed">
                             Handcrafted organic skincare made with love and intention. Sustainable, ethical, and pure.
@@ -76,7 +76,7 @@ export default function NewFooter() {
                     ))}
                 </div>
                 <div className="border-t border-gray-100 dark:border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-xs text-gray-400">© {new Date().getFullYear()} Nature's Essence. All rights reserved.</p>
+                    <p className="text-xs text-gray-400">© {new Date().getFullYear()} Cj.Drk Cosmetic Store. All rights reserved.</p>
                     <PaymentMethods />
                 </div>
             </div>

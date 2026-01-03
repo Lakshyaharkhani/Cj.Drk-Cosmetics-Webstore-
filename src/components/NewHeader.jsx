@@ -44,7 +44,7 @@ export default function NewHeader() {
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-3xl">spa</span>
             <Link href="/">
-                <h1 className="text-xl font-bold tracking-tight">Nature's Essence</h1>
+                <h1 className="text-xl font-bold tracking-tight">Cj.Drk Cosmetic Store</h1>
             </Link>
           </div>
 
@@ -80,7 +80,7 @@ export default function NewHeader() {
                     <div className="flex items-center gap-2 mb-4">
                         <span className="material-symbols-outlined text-primary text-3xl">spa</span>
                         <Link href="/" onClick={() => setSheetOpen(false)}>
-                            <h1 className="text-xl font-bold tracking-tight">Nature's Essence</h1>
+                            <h1 className="text-xl font-bold tracking-tight">Cj.Drk Cosmetic Store</h1>
                         </Link>
                     </div>
                     <nav className="flex flex-col gap-2">

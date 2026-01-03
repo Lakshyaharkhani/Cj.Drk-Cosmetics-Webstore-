@@ -7,7 +7,7 @@ import NewHeader from '../components/NewHeader';
 import NewFooter from '../components/NewFooter';
 
 export const metadata = {
-  title: "Nature's Essence - Handmade Soaps & Skincare",
+  title: "Cj.Drk Cosmetic Store - Handmade Soaps & Skincare",
   description: 'Handcrafted organic skincare made with love and intention. Sustainable, ethical, and pure.',
 };
 

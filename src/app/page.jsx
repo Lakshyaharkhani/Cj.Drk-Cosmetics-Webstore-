@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -28,7 +29,7 @@ export default function Home() {
                 <span className="text-xs font-bold uppercase tracking-wide">100% Organic Ingredients</span>
               </div>
               <h2 className="text-5xl md:text-6xl font-extrabold leading-[1.1] tracking-tight">
-                Nature’s Essence, <br />
+                Cj.Drk Cosmetic Store, <br />
                 <span className="text-primary">Cold Pressed</span> for You.
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-md leading-relaxed">
