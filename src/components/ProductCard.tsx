@@ -34,8 +34,9 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product as CartProduct);
   };
 
-  const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
-
+  const imageUrl = Array.isArray(images) && images.length > 0 && images[0]
+    ? images[0]
+    : 'https://picsum.photos/seed/placeholder/400/400';
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg">
