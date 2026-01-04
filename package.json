@@ -45,11 +45,12 @@
     "firebase": "^10.12.2",
     "framer-motion": "^11.3.19",
     "genkit": "^1.14.1",
-    "next": "^14.2.5",
+    "lucide-react": "^0.414.0",
+    "next": "15.0.0-rc.0",
     "patch-package": "^8.0.0",
-    "react": "^18.3.1",
+    "react": "19.0.0-rc-f994737d14-20240522",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "19.0.0-rc-f994737d14-20240522",
     "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
@@ -57,13 +58,17 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.10",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/uuid": "^9.0.8",
     "genkit-cli": "^1.14.1",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.5.2"
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.6",
+    "typescript": "^5.5.3"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
   }
 }
