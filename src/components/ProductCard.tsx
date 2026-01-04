@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from 'next/image';
@@ -17,7 +18,8 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   
-  if (!product || !product.id) {
+  // Strengthened check: ensure product and its core properties, especially images, are present.
+  if (!product || !product.id || !product.images || product.images.length === 0) {
     return <ProductCardSkeleton />;
   }
 
@@ -28,7 +30,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product, 1);
   };
 
-  const imageUrl = images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
+  const imageUrl = images[0];
   const effectiveRating = rating || 0;
   const effectiveReviews = reviewCount || 0;
 
