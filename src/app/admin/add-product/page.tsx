@@ -12,10 +12,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
 import { useToast } from '../../../hooks/use-toast';
 import { PlusCircle, Trash2 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, DocumentData } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
@@ -41,93 +42,86 @@ interface Category extends DocumentData {
   slug: string;
 }
 
-export default function AdminProductUploadPage() {
-  const { toast } = useToast();
-  const firestore = useFirestore();
+const AddProductForm = () => {
+    const { toast } = useToast();
+    const firestore = useFirestore();
 
-  const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
-  const { data: categories } = useCollection<Category>(categoriesRef);
+    const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
+    const { data: categories } = useCollection<Category>(categoriesRef);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      price: 0,
-      originalPrice: undefined,
-      brand: '',
-      categorySlug: '',
-      stockStatus: 'In Stock',
-      images: [''],
-      features: [{ value: '' }],
-      specifications: [{ key: '', value: '' }],
-    },
-  });
+    const form = useForm<ProductFormValues>({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+        name: '',
+        description: '',
+        price: 0,
+        originalPrice: undefined,
+        brand: '',
+        categorySlug: '',
+        stockStatus: 'In Stock',
+        images: [''],
+        features: [{ value: '' }],
+        specifications: [{ key: '', value: '' }],
+        },
+    });
 
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-    control: form.control,
-    name: "images"
-  });
+    const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+        control: form.control,
+        name: "images"
+    });
 
-  const { fields: featureFields, append: appendFeature, remove: removeFeature } = useFieldArray({
-    control: form.control,
-    name: "features"
-  });
+    const { fields: featureFields, append: appendFeature, remove: removeFeature } = useFieldArray({
+        control: form.control,
+        name: "features"
+    });
 
-  const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
-    control: form.control,
-    name: "specifications"
-  });
+    const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
+        control: form.control,
+        name: "specifications"
+    });
 
 
-  const onSubmit = async (data: ProductFormValues) => {
-    try {
-        const productsRef = collection(firestore, 'products');
-        const categoryDoc = categories?.find(c => c.slug === data.categorySlug);
+    const onSubmit = async (data: ProductFormValues) => {
+        try {
+            const productsRef = collection(firestore, 'products');
+            const categoryDoc = categories?.find(c => c.slug === data.categorySlug);
 
-        const productData = {
-          ...data,
-          category: categoryDoc ? categoryDoc.name : 'Uncategorized',
-          features: data.features.map(f => f.value),
-          specifications: data.specifications.reduce((acc, spec) => {
-            acc[spec.key] = spec.value;
-            return acc;
-          }, {} as Record<string, string>),
-          rating: 0, // Initial rating
-          reviewCount: 0, // Initial review count
-          createdAt: new Date(),
-        };
+            const productData = {
+            ...data,
+            category: categoryDoc ? categoryDoc.name : 'Uncategorized',
+            features: data.features.map(f => f.value),
+            specifications: data.specifications.reduce((acc, spec) => {
+                acc[spec.key] = spec.value;
+                return acc;
+            }, {} as Record<string, string>),
+            rating: 0, // Initial rating
+            reviewCount: 0, // Initial review count
+            createdAt: new Date(),
+            };
 
-        await addDocumentNonBlocking(productsRef, productData);
+            await addDocumentNonBlocking(productsRef, productData);
 
-        toast({
-            title: 'Product Added!',
-            description: `${data.name} has been successfully added.`,
-        });
-        form.reset();
-        // Reset field arrays
-        form.setValue('images', ['']);
-        form.setValue('features', [{value: ''}]);
-        form.setValue('specifications', [{key: '', value: ''}]);
-    } catch (error: any) {
-        toast({
-            title: 'Error',
-            description: error.message || 'Failed to add the product. Please try again.',
-            variant: 'destructive',
-        });
-        console.error(error);
-    }
-  };
-
-  return (
-    <div className="container mx-auto px-4 py-12">
-      <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="font-headline text-3xl">Add New Product</CardTitle>
-          <CardDescription>Fill out the form below to add a new product to your store.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
+            toast({
+                title: 'Product Added!',
+                description: `${data.name} has been successfully added.`,
+            });
+            form.reset();
+            // Reset field arrays
+            form.setValue('images', ['']);
+            form.setValue('features', [{value: ''}]);
+            form.setValue('specifications', [{key: '', value: ''}]);
+        } catch (error: any) {
+            toast({
+                title: 'Error',
+                description: error.message || 'Failed to add the product. Please try again.',
+                variant: 'destructive',
+            });
+            console.error(error);
+        }
+    };
+    
+    return (
+        <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField control={form.control} name="name" render={({ field }) => (
                 <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} placeholder="e.g., AeroSound Pro TWS Earbuds" /></FormControl><FormMessage /></FormItem>
@@ -244,11 +238,46 @@ export default function AdminProductUploadPage() {
                 {form.formState.isSubmitting ? 'Adding Product...' : 'Add Product'}
               </Button>
             </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+        </Form>
+    )
+}
+
+
+export default function AdminProductUploadPage() {
+    const [isClient, setIsClient] = useState(false)
+
+    useEffect(() => {
+        setIsClient(true)
+    }, [])
+
+    return (
+        <div className="container mx-auto px-4 py-12">
+        <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+            <CardTitle className="font-headline text-3xl">Add New Product</CardTitle>
+            <CardDescription>Fill out the form below to add a new product to your store.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isClient ? <AddProductForm/> : (
+                    <div className="space-y-8">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-20 w-full" />
+                        <div className="grid grid-cols-2 gap-8">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                         <div className="grid grid-cols-2 gap-8">
+                            <Skeleton className="h-10 w-full" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+        </div>
+    );
 }
 
     

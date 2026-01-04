@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
@@ -23,8 +23,7 @@ interface Product extends DocumentData {
     reviewCount: number;
 }
 
-
-export default function ProductPage() {
+function ProductPageContent() {
   const params = useParams();
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
   const firestore = useFirestore();
@@ -64,8 +63,8 @@ export default function ProductPage() {
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
             {product.images.map((img, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={cn(
                   "aspect-square w-full overflow-hidden rounded-lg border-2 cursor-pointer transition-all",
                   selectedImage === index ? 'border-primary' : 'border-transparent'
@@ -153,4 +152,12 @@ export default function ProductPage() {
   );
 }
 
-    
+export default function ProductPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? <ProductPageContent /> : <ProductLoadingPage />;
+}
