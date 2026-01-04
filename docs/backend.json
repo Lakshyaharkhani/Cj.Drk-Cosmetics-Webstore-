@@ -3,139 +3,47 @@
   "entities": {
     "Product": {
       "title": "Product",
-      "description": "An item available for sale in the store, with properties for Shiprocket integration.",
+      "description": "An item available for sale in the store.",
       "type": "object",
       "properties": {
-        "active": { "type": "boolean" },
         "name": { "type": "string" },
-        "slug": { "type": "string" },
-        "description": { "type": "string" },
         "price": { "type": "number" },
-        "mrp": { "type": "number" },
-        "currency": { "type": "string", "enum": ["INR", "USD"] },
-        "sku": { "type": "string" },
-        "stock_quantity": { "type": "number" },
-        "weight_kg": { "type": "number" },
-        "dimensions": {
+        "originalPrice": { "type": "number" },
+        "category": { "type": "string", "enum": ["soaps", "perfumes", "serums", "gifting"] },
+        "description": { "type": "string" },
+        "image": { "type": "string", "format": "uri" },
+        "thumbnails": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "rating": { "type": "number" },
+        "reviews": { "type": "number" },
+        "isBestSeller": { "type": "boolean" },
+        "isNew": { "type": "boolean" },
+        "isSale": { "type": "boolean" },
+        "ingredients": { "type": "string" },
+        "scentNotes": {
           "type": "object",
           "properties": {
-            "length_cm": { "type": "number" },
-            "breadth_cm": { "type": "number" },
-            "height_cm": { "type": "number" }
+            "top": { "type": "string" },
+            "middle": { "type": "string" },
+            "base": { "type": "string" }
           },
-          "required": ["length_cm", "breadth_cm", "height_cm"]
-        },
-        "category_id": { "type": "string" },
-        "tags": { "type": "array", "items": { "type": "string" } },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
-        "has_variants": { "type": "boolean" },
-        "variants": {
-          "type": "array",
-          "items": { "$ref": "#/entities/ProductVariant" }
-        },
-        "created_at": { "type": "number" },
-        "updated_at": { "type": "number" }
+          "required": ["top", "middle", "base"]
+        }
       },
-      "required": ["active", "name", "slug", "price", "mrp", "currency", "sku", "stock_quantity", "weight_kg", "dimensions", "category_id", "images", "has_variants", "created_at", "updated_at"]
-    },
-    "ProductVariant": {
-      "title": "Product Variant",
-      "description": "A specific version of a product, like size or color.",
-      "type": "object",
-      "properties": {
-        "sku": { "type": "string" },
-        "name": { "type": "string" },
-        "price": { "type": "number" },
-        "stock_quantity": { "type": "number" }
-      },
-      "required": ["sku", "name", "price", "stock_quantity"]
+      "required": ["name", "price", "category", "description", "image", "thumbnails", "rating", "reviews"]
     },
     "User": {
       "title": "User",
-      "description": "A user profile, including authentication and address details.",
+      "description": "A user profile for the store.",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
+        "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "phone_number": { "type": "string" },
-        "display_name": { "type": "string" },
-        "saved_addresses": {
-          "type": "array",
-          "items": { "$ref": "#/entities/Address" }
-        },
-        "role": { "type": "string", "enum": ["customer", "admin", "support"] },
-        "created_at": { "type": "number" }
+        "points": { "type": "number" },
+        "orderCount": { "type": "number" },
+        "memberStatus": { "type": "string" },
+        "avatar": { "type": "string", "format": "uri" }
       },
-      "required": ["uid", "email", "display_name", "role", "created_at"]
-    },
-    "Address": {
-      "title": "Address",
-      "description": "A shipping or billing address.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "address_line1": { "type": "string" },
-        "address_line2": { "type": "string" },
-        "city": { "type": "string" },
-        "state": { "type": "string" },
-        "pincode": { "type": "string" },
-        "country": { "type": "string" },
-        "phone": { "type": "string" },
-        "type": { "type": "string", "enum": ["home", "work"] },
-        "is_default": { "type": "boolean" }
-      },
-      "required": ["name", "address_line1", "city", "state", "pincode", "country", "phone", "type", "is_default"]
-    },
-    "Order": {
-      "title": "Order",
-      "description": "A customer order with shipping and payment details.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "user_id": { "type": "string" },
-        "items": {
-          "type": "array",
-          "items": { "$ref": "#/entities/OrderItem" }
-        },
-        "subtotal": { "type": "number" },
-        "tax": { "type": "number" },
-        "shipping_cost": { "type": "number" },
-        "discount_total": { "type": "number" },
-        "grand_total": { "type": "number" },
-        "currency": { "type": "string", "enum": ["INR"] },
-        "shipping_address": { "$ref": "#/entities/Address" },
-        "billing_address": { "$ref": "#/entities/Address" },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "returned"] },
-        "payment_status": { "type": "string", "enum": ["pending", "paid", "failed", "refunded"] },
-        "shiprocket_order_id": { "type": "number" },
-        "shiprocket_shipment_id": { "type": "number" },
-        "awb_code": { "type": "string" },
-        "courier_name": { "type": "string" },
-        "tracking_url": { "type": "string", "format": "uri" },
-        "checkout_source": { "type": "string", "enum": ["shiprocket_quick", "custom"] },
-        "payment_method": { "type": "string", "enum": ["cod", "prepaid"] },
-        "gateway_transaction_id": { "type": "string" },
-        "created_at": { "type": "number" },
-        "updated_at": { "type": "number" }
-      },
-      "required": ["id", "user_id", "items", "subtotal", "tax", "shipping_cost", "grand_total", "currency", "shipping_address", "billing_address", "status", "payment_status", "checkout_source", "payment_method", "created_at", "updated_at"]
-    },
-    "OrderItem": {
-      "title": "Order Item",
-      "description": "An item within an order.",
-      "type": "object",
-      "properties": {
-        "product_id": { "type": "string" },
-        "sku": { "type": "string" },
-        "name": { "type": "string" },
-        "image_url": { "type": "string", "format": "uri" },
-        "quantity": { "type": "number" },
-        "unit_price": { "type": "number" },
-        "total_price": { "type": "number" },
-        "variant_name": { "type": "string" }
-      },
-      "required": ["product_id", "sku", "name", "image_url", "quantity", "unit_price", "total_price"]
+      "required": ["name", "email", "points", "orderCount", "memberStatus", "avatar"]
     },
     "Cart": {
       "title": "Cart",
@@ -157,11 +65,26 @@
       "type": "object",
       "properties": {
         "product_id": { "type": "string" },
-        "sku": { "type": "string" },
-        "quantity": { "type": "number" },
-        "added_at": { "type": "number" }
+        "quantity": { "type": "number" }
       },
-      "required": ["product_id", "sku", "quantity", "added_at"]
+      "required": ["product_id", "quantity"]
+    },
+    "Order": {
+        "title": "Order",
+        "description": "A customer order.",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "user_id": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "grand_total": { "type": "number" },
+          "status": { "type": "string" },
+          "created_at": { "type": "number" }
+        },
+        "required": ["id", "user_id", "items", "grand_total", "status", "created_at"]
     }
   },
   "auth": {
@@ -180,7 +103,7 @@
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
-      "description": "Stores customer orders with Shiprocket integration details."
+      "description": "Stores customer orders."
     },
     "/carts/{userId}": {
       "schema": { "$ref": "#/entities/Cart" },
