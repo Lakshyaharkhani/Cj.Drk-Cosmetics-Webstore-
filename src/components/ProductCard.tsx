@@ -14,7 +14,7 @@ interface Product extends DocumentData {
   name: string;
   price: number;
   originalPrice?: number;
-  images: string[];
+  image: string; // Changed from images: string[]
   rating: number;
   reviewCount: number;
   category: string;
@@ -27,16 +27,16 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { id, name, price, originalPrice, images, rating, reviewCount, category, stockStatus } = product;
+  const { id, name, price, originalPrice, image, rating, reviewCount, category, stockStatus } = product;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    addToCart(product as CartProduct);
+    // The product object for the cart needs an 'images' array.
+    const cartProduct = { ...product, images: [product.image] };
+    addToCart(cartProduct as CartProduct);
   };
 
-  const imageUrl = Array.isArray(images) && images.length > 0 && images[0]
-    ? images[0]
-    : 'https://picsum.photos/seed/placeholder/400/400';
+  const imageUrl = image && typeof image === 'string' ? image : 'https://picsum.photos/seed/placeholder/400/400';
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg">
