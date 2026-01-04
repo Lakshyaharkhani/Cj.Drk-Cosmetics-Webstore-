@@ -34,7 +34,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product as CartProduct);
   };
 
-  const imageUrl = images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
+  const imageUrl = Array.isArray(images) && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
 
 
   return (
@@ -81,5 +81,3 @@ export default function ProductCard({ product }: ProductCardProps) {
     </div>
   );
 }
-
-    
