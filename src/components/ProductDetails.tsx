@@ -18,6 +18,7 @@ interface Product extends DocumentData {
   price: number;
   originalPrice?: number;
   features: string[];
+  description: string;
 }
 
 
@@ -40,57 +41,54 @@ export default function ProductDetails({ product }: ProductDetailsProps) {
   }
 
   return (
-    <div>
-        <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-        <h1 className="font-headline text-4xl lg:text-5xl">{product.name}</h1>
-        <div className="mt-4 flex items-center gap-4">
-            <div className="flex items-center gap-1">
-            <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-            <span className="font-bold">{product.rating}</span>
-            <span className="text-sm text-muted-foreground">({product.reviewCount} reviews)</span>
-            </div>
-            <span className={`text-sm font-semibold ${product.stockStatus === 'In Stock' ? 'text-green-600' : 'text-red-600'}`}>
-            {product.stockStatus}
-            </span>
-        </div>
-
-        <div className="mt-6">
-            <span className="text-4xl font-bold">Rs {product.price}</span>
-            {product.originalPrice && (
-            <span className="ml-3 text-xl text-muted-foreground line-through">Rs {product.originalPrice}</span>
-            )}
-        </div>
-
-        <div className="mt-8">
-            <h3 className="font-bold text-lg mb-2">Key Features:</h3>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-            {product.features.map(feature => <li key={feature}>{feature}</li>)}
-            </ul>
-        </div>
-
-        <div className="mt-8 flex items-center gap-4">
-            <p className="font-bold">Quantity:</p>
-            <div className="flex items-center rounded-md border">
-            <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
-                <Minus className="h-4 w-4" />
-            </Button>
-            <span className="w-12 text-center">{quantity}</span>
-            <Button variant="ghost" size="icon" onClick={() => setQuantity(q => q + 1)}>
-                <Plus className="h-4 w-4" />
-            </Button>
+    <div className="flex flex-col gap-8">
+        <div className="space-y-4">
+            <Badge variant="secondary">{product.category}</Badge>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">{product.name}</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex text-primary">
+                    {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                    ))}
+                </div>
+                <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{product.reviewCount} verified reviews</span>
             </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Button size="lg" onClick={handleAddToCart}>
-                Add to Cart
+        <div className="flex items-baseline gap-4 border-b border-gray-100 dark:border-gray-800 pb-8">
+            <span className="text-4xl font-black text-primary">Rs {product.price.toFixed(2)}</span>
+            {product.originalPrice && <span className="text-xl text-gray-400 line-through decoration-red-400/50">Rs {product.originalPrice.toFixed(2)}</span>}
+        </div>
+
+        <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Description</h3>
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">{product.description}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex items-center rounded-2xl border-2 border-gray-100 dark:border-gray-800 h-16 bg-white dark:bg-gray-800 overflow-hidden">
+                <Button variant="ghost" onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-6 text-gray-400 hover:text-primary transition-colors h-full rounded-none"><Minus className="h-5 w-5" /></Button>
+                <span className="w-8 text-center font-black text-lg">{quantity}</span>
+                <Button variant="ghost" onClick={() => setQuantity(q => q + 1)} className="px-6 text-gray-400 hover:text-primary transition-colors h-full rounded-none"><Plus className="h-5 w-5" /></Button>
+            </div>
+            <Button
+                onClick={handleAddToCart}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl h-16 px-10 shadow-xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+            >
+                <span className="material-symbols-outlined">add_shopping_cart</span> Add to Bag
             </Button>
-            <Button size="lg" variant="outline" onClick={handleBuyNow}>
-                Buy Now
-            </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
+                <span className="material-symbols-outlined text-primary">local_shipping</span>
+                Fast, Carbon-Neutral Shipping
+            </div>
+            <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
+                <span className="material-symbols-outlined text-primary">verified_user</span>
+                100% Organic Ingredients
+            </div>
         </div>
     </div>
   );
 }
-
-    
