@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -7,16 +6,15 @@ import * as z from 'zod';
 import { useCart } from '@/context/CartContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Separator } from '../../components/ui/separator';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../components/ui/form';
-import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
-import { CreditCard, Truck } from 'lucide-react';
-import React from 'react';
+import { CreditCard, Truck, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
+import Link from 'next/link';
 
 const shippingSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -28,20 +26,21 @@ const shippingSchema = z.object({
 });
 
 const paymentSchema = z.object({
-    paymentMethod: z.enum(['card', 'upi', 'cod'], {
-        required_error: "You need to select a payment method."
-    })
+    cardNumber: z.string().min(16, "Card number must be 16 digits.").max(16, "Card number must be 16 digits."),
+    expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\s*\/\s*([0-9]{2})$/, "Expiry date must be in MM/YY format."),
+    cvc: z.string().min(3, "CVC must be 3 digits.").max(4, "CVC can be atmost 4 digits."),
 });
 
 type ShippingFormValues = z.infer<typeof shippingSchema>;
 type PaymentFormValues = z.infer<typeof paymentSchema>;
 
-
 export default function CheckoutPage() {
-  const { cartItems, cartTotal, cartCount, clearCart } = useCart();
+  const { cartItems, cartTotal, clearCart, cartCount } = useCart();
   const router = useRouter();
   const { toast } = useToast();
-  const [step, setStep] = React.useState('shipping');
+  const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState<ShippingFormValues | null>(null);
 
   const shippingForm = useForm<ShippingFormValues>({
     resolver: zodResolver(shippingSchema),
@@ -54,50 +53,69 @@ export default function CheckoutPage() {
       state: '',
     }
   });
-
+  
   const paymentForm = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
+    defaultValues: {
+        cardNumber: '',
+        expiryDate: '',
+        cvc: '',
+    }
   });
 
+
   const onShippingSubmit = (data: ShippingFormValues) => {
-    console.log('Shipping details:', data);
+    setShippingInfo(data);
     setStep('payment');
   };
 
   const onPaymentSubmit = (data: PaymentFormValues) => {
-    console.log('Payment method:', data.paymentMethod);
-    toast({
-        title: "Order Placed!",
-        description: "Your order has been placed successfully.",
-    });
-    clearCart();
-    router.push('/order-confirmation');
+    setIsProcessing(true);
+    // Simulate bank verification delay
+    setTimeout(() => {
+        setIsProcessing(false);
+        toast({
+            title: "Order Placed!",
+            description: "Your order has been placed successfully. This was a simulation.",
+        });
+        clearCart();
+        router.push('/order-confirmation');
+    }, 2500);
   }
 
   if (cartCount === 0 && typeof window !== 'undefined') {
     router.push('/products');
     return null;
   }
+  
+  const shippingCost = step === 'shipping' ? 0 : 50;
 
   return (
+    <>
+    {isProcessing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
+            <p>Verifying Transaction...</p>
+            </div>
+        </div>
+    )}
     <div className="container mx-auto px-4 py-12">
-      <h1 className="font-headline text-4xl mb-8 text-center">Checkout</h1>
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         <div className="lg:order-last">
-            <Card>
+            <Card className="bg-gray-50 dark:bg-gray-900/50">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
                         {cartItems.map(item => (
-                            <div key={item.id} className="flex items-center gap-4">
-                                <Image src={item.images[0]} alt={item.name} width={64} height={64} className="h-16 w-16 rounded-md object-cover" />
-                                <div className="flex-grow">
-                                    <p className="font-semibold">{item.name}</p>
-                                    <p className="text-sm text-muted-foreground">Quantity: {item.quantity}</p>
+                             <div key={item.id} className="flex gap-4 items-center">
+                                <div className="relative w-16 h-16 rounded-lg overflow-hidden border bg-white">
+                                    <Image src={item.images[0]} alt={item.name} width={64} height={64} className="w-full h-full object-cover" />
+                                    <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-[10px] size-5 flex items-center justify-center rounded-full">{item.quantity}</span>
                                 </div>
-                                <p className="font-medium">Rs {(item.price * item.quantity).toFixed(2)}</p>
+                                <div className="flex-1"><p className="text-sm font-bold truncate">{item.name}</p></div>
+                                <p className="font-bold">Rs {(item.price * item.quantity).toFixed(2)}</p>
                             </div>
                         ))}
                     </div>
@@ -109,12 +127,12 @@ export default function CheckoutPage() {
                         </div>
                          <div className="flex justify-between">
                             <span>Shipping</span>
-                            <span>Free</span>
+                            <span>{step === 'shipping' ? '--' : `Rs ${shippingCost.toFixed(2)}`}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between text-lg font-bold">
                             <span>Total</span>
-                            <span>Rs {cartTotal.toFixed(2)}</span>
+                            <span>Rs {(cartTotal + shippingCost).toFixed(2)}</span>
                         </div>
                     </div>
                 </CardContent>
@@ -122,6 +140,14 @@ export default function CheckoutPage() {
         </div>
 
         <div>
+            <nav className="flex items-center gap-2 text-sm mb-8">
+                <Link href="/cart" className="text-primary font-medium">Cart</Link>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <span className={step === 'shipping' ? 'font-bold' : 'text-gray-500'}>Information</span>
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+                <span className={step === 'payment' ? 'font-bold' : 'text-gray-500'}>Payment</span>
+            </nav>
+            
             {step === 'shipping' && (
                 <Card>
                     <CardHeader>
@@ -153,7 +179,10 @@ export default function CheckoutPage() {
                                 <FormField control={shippingForm.control} name="state" render={({ field }) => (
                                     <FormItem><FormLabel>State</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                                 )}/>
-                                <Button type="submit" size="lg" className="w-full">Continue to Payment</Button>
+                                <div className="flex justify-between items-center pt-6">
+                                     <Link href="/cart" className="text-primary font-bold">Return to cart</Link>
+                                     <Button type="submit" size="lg">Continue to Payment</Button>
+                                </div>
                             </form>
                         </Form>
                     </CardContent>
@@ -167,34 +196,45 @@ export default function CheckoutPage() {
                             <CreditCard className="h-6 w-6" />
                             <CardTitle className="font-headline text-2xl">Payment Method</CardTitle>
                         </div>
+                        <p className="text-gray-500 text-sm">All transactions are secure and encrypted.</p>
                     </CardHeader>
                     <CardContent>
+                        <div className="border rounded-xl divide-y dark:border-gray-800 mb-6">
+                            {shippingInfo && (
+                                <>
+                                <div className="p-4 flex justify-between items-center"><span className="text-gray-500">Contact</span><span>{shippingInfo.email}</span><Button variant="link" size="sm" onClick={() => setStep('shipping')}>Change</Button></div>
+                                <div className="p-4 flex justify-between items-center"><span className="text-gray-500">Ship to</span><span className="text-right">{shippingInfo.address}, {shippingInfo.city}</span><Button variant="link" size="sm" onClick={() => setStep('shipping')}>Change</Button></div>
+                                </>
+                            )}
+                        </div>
+
                         <Form {...paymentForm}>
                             <form onSubmit={paymentForm.handleSubmit(onPaymentSubmit)} className="space-y-6">
-                                <FormField control={paymentForm.control} name="paymentMethod" render={({ field }) => (
-                                    <FormItem className="space-y-3">
-                                        <FormControl>
-                                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex flex-col space-y-1">
-                                                <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
-                                                    <FormControl><RadioGroupItem value="card" /></FormControl>
-                                                    <FormLabel className="font-normal w-full">Credit/Debit Card</FormLabel>
-                                                </FormItem>
-                                                <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
-                                                    <FormControl><RadioGroupItem value="upi" /></FormControl>
-                                                    <FormLabel className="font-normal w-full">UPI</FormLabel>
-                                                </FormItem>
-                                                <FormItem className="flex items-center space-x-3 space-y-0 rounded-md border p-4">
-                                                    <FormControl><RadioGroupItem value="cod" /></FormControl>
-                                                    <FormLabel className="font-normal w-full">Cash on Delivery</FormLabel>
-                                                </FormItem>
-                                            </RadioGroup>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}/>
-                                <div className='flex gap-4'>
-                                    <Button variant="outline" size="lg" className="w-full" onClick={() => setStep('shipping')}>Back to Shipping</Button>
-                                    <Button type="submit" size="lg" className="w-full">Place Order</Button>
+                                 <div className="border border-primary rounded-xl overflow-hidden">
+                                    <div className="bg-primary/5 p-4 flex items-center justify-between">
+                                        <span className="font-bold">Credit Card</span>
+                                        <div className="flex gap-2"><CreditCard className="h-5 w-5"/></div>
+                                    </div>
+                                    <div className="p-6 space-y-4">
+                                        <FormField control={paymentForm.control} name="cardNumber" render={({ field }) => (
+                                            <FormItem><FormControl><Input {...field} placeholder="Card number" /></FormControl><FormMessage /></FormItem>
+                                        )}/>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <FormField control={paymentForm.control} name="expiryDate" render={({ field }) => (
+                                                <FormItem><FormControl><Input {...field} placeholder="MM / YY" /></FormControl><FormMessage /></FormItem>
+                                            )}/>
+                                            <FormField control={paymentForm.control} name="cvc" render={({ field }) => (
+                                                <FormItem><FormControl><Input {...field} placeholder="CVC" /></FormControl><FormMessage /></FormItem>
+                                            )}/>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className='flex justify-between items-center pt-6'>
+                                    <Button variant="link" onClick={() => setStep('shipping')}>Back to Information</Button>
+                                    <Button type="submit" size="lg" disabled={isProcessing}>
+                                        {isProcessing ? 'Processing...' : `Pay Rs ${(cartTotal + shippingCost).toFixed(2)}`}
+                                    </Button>
                                 </div>
                             </form>
                         </Form>
@@ -204,7 +244,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
-
-    
