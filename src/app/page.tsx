@@ -5,8 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import placeholderImages from '../lib/placeholder-images.json';
-import { useMemo } from 'react';
-import { useCollection, useFirestore } from '../firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
 import { collection, DocumentData } from 'firebase/firestore';
 import ProductCard from '@/components/ProductCard';
 
@@ -25,7 +24,7 @@ export default function Home() {
   const { hero, categories } = placeholderImages;
   
   const firestore = useFirestore();
-  const productsRef = useMemo(() => collection(firestore, 'products'), [firestore]);
+  const productsRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
   const { data: products } = useCollection<Product>(productsRef);
 
   return (
