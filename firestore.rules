@@ -15,30 +15,30 @@ service cloud.firestore {
     }
 
     // PUBLIC COLLECTIONS
-    // Products, Categories, and Policies are publicly readable by anyone.
+    // Products are publicly readable by anyone. Writes are disallowed from the client.
     match /products/{productId} {
       allow read: if true;
-    }
-    match /categories/{categoryId} {
-      allow read: if true;
-    }
-    match /policies/{policyId} {
-      allow read: if true;
+      allow write: if false;
     }
     
     // USER-SPECIFIC COLLECTIONS
     // A user can only read and write documents within their own user folder.
-    match /users/{userId}/{document=**} {
+    match /users/{userId} {
        allow read, write: if isOwner(userId);
     }
 
+    // A user can only read and write their own cart
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
     // ORDERS
-    // A user can only read or write an order if their UID matches the userId on the order document.
+    // A user can create an order for themselves.
+    // They can read their own orders, but not update or delete them directly.
     match /orders/{orderId} {
-      // Allow create if the user is creating an order for themselves
-      allow create: if isUser() && request.resource.data.userId == request.auth.uid;
-      // Allow read, update, delete if the user is the owner of the existing order
-      allow read, update, delete: if isUser() && resource.data.userId == request.auth.uid;
+      allow create: if isUser() && request.resource.data.user_id == request.auth.uid;
+      allow read: if isUser() && resource.data.user_id == request.auth.uid;
+      allow update, delete: if false;
     }
 
     // Default deny all other reads/writes
