@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss"
 
 const config = {
@@ -11,8 +12,15 @@ const config = {
     extend: {
       colors: {
         "primary": "hsl(var(--primary))",
+        "primary-hover": "#d95a1a",
         "background-light": "#f8f6f6",
-        "background-dark": "#221610",
+        "background-dark": "#181311",
+        "surface-light": "#ffffff",
+        "surface-dark": "#2d201a",
+        "stone-850": "#1f1a18",
+        "stone-950": "#181311",
+        "border-light": "#e6dfdb",
+        "border-dark": "#4a3b32",
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -49,7 +57,7 @@ const config = {
       },
       fontFamily: {
         display: ['Manrope', 'sans-serif'],
-        body: ['Manrope', 'sans-serif'],
+        body: ['Noto Sans', 'sans-serif'],
         headline: ['Manrope', 'sans-serif'],
       },
       borderRadius: {
