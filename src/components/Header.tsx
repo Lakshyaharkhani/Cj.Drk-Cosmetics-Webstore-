@@ -5,17 +5,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '../firebase';
-import { collection, query, where, limit, DocumentData } from 'firebase/firestore';
+import { useUser } from '../firebase';
 import Image from 'next/image';
-
-interface Product extends DocumentData {
-  id: string;
-  name: string;
-  category: string;
-  images: string[];
-  price: number;
-}
+import { MOCK_PRODUCTS } from '../lib/constants';
+import { Product } from '../lib/types';
 
 const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     const { cartCount } = useCart();
@@ -23,32 +16,26 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     const router = useRouter();
     const [search, setSearch] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [suggestions, setSuggestions] = useState<Product[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
-    const firestore = useFirestore();
 
-    const productsRef = useMemoFirebase(() => {
-        if (!firestore || search.trim().length < 2) return null;
-        // This query attempts to do a "starts with" search.
-        // It requires an index on the 'name' field.
-        return query(
-            collection(firestore, 'products'),
-            where('name', '>=', search.trim()),
-            where('name', '<=', search.trim() + '\uf8ff'),
-            limit(5)
-        );
-    }, [firestore, search]);
-
-    const { data: suggestions } = useCollection<Product>(productsRef);
-
+    // Handle live search suggestions
     useEffect(() => {
         if (search.trim().length >= 2) {
+            const matches = MOCK_PRODUCTS.filter(p => 
+                p.name.toLowerCase().includes(search.toLowerCase()) ||
+                p.category.toLowerCase().includes(search.toLowerCase())
+            ).slice(0, 5);
+            setSuggestions(matches);
             setShowSuggestions(true);
         } else {
+            setSuggestions([]);
             setShowSuggestions(false);
         }
-    }, [search, suggestions]);
+    }, [search]);
 
+    // Close suggestions when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -70,9 +57,9 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
 
     const handleAccountClick = () => {
         if (user) {
-            router.push('/auth'); // Navigate to dashboard/profile page
+            router.push('/auth');
         } else {
-            router.push('/auth'); // Navigate to login/signup page
+            router.push('/auth');
         }
     };
 
@@ -113,7 +100,7 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                         </div>
                         
                         <Link href="/" className="flex items-center gap-2">
-                           <Image src="https://firebasestorage.googleapis.com/v0/b/cjdrkcosmeticstore.appspot.com/o/Logo.png.png?alt=media" alt="Cj.Drk Logo" width={32} height={32} className="h-8 w-8 object-contain" />
+                            <Image src="https://firebasestorage.googleapis.com/v0/b/cjdrkcosmeticstore.appspot.com/o/Logo.png.png?alt=media" alt="Cj.Drk Logo" width={32} height={32} className="h-8 w-8 object-contain" />
                            <h1 className="text-xl font-bold tracking-tight">Cj.Drk</h1>
                         </Link>
                         
@@ -131,20 +118,20 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                                     <button type="submit" className="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg hover:text-primary">search</button>
                                 </form>
                                 
-                                {showSuggestions && (suggestions?.length ?? 0) > 0 && (
+                                {showSuggestions && suggestions.length > 0 && (
                                     <div className="absolute top-full mt-2 left-0 w-80 bg-white dark:bg-gray-900 shadow-2xl rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                                         <div className="p-3 border-b border-gray-50 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Products</span>
                                         </div>
                                         <div className="max-h-96 overflow-y-auto">
-                                            {suggestions!.map(product => (
+                                            {suggestions.map(product => (
                                                 <Link 
                                                     key={product.id}
                                                     href={`/product/${product.id}`}
                                                     onClick={() => { setShowSuggestions(false); setSearch(''); }}
                                                     className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                                 >
-                                                    <Image src={product.images[0] || 'https://placehold.co/40x40'} className="size-10 rounded-lg object-cover bg-gray-100" alt={product.name} width={40} height={40} />
+                                                    <Image src={product.image || 'https://placehold.co/40x40'} className="size-10 rounded-lg object-cover bg-gray-100" alt={product.name} width={40} height={40} />
                                                     <div className="flex-1">
                                                         <p className="text-xs font-bold truncate">{product.name}</p>
                                                         <p className="text-[10px] text-primary font-medium">Rs {product.price.toFixed(2)}</p>
@@ -208,16 +195,16 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                                 <button type="submit" className="material-symbols-outlined absolute right-3 top-3 text-gray-400">search</button>
                             </form>
                             
-                            {showSuggestions && (suggestions?.length ?? 0) > 0 && (
+                            {showSuggestions && suggestions.length > 0 && (
                                 <div className="absolute top-full mt-2 left-0 w-full bg-white dark:bg-gray-900 shadow-xl rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-10">
-                                    {suggestions!.map(product => (
+                                    {suggestions.map(product => (
                                         <Link 
                                             key={product.id}
                                             href={`/product/${product.id}`}
                                             onClick={() => { setIsMenuOpen(false); setShowSuggestions(false); setSearch(''); }}
                                             className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                                         >
-                                            <Image src={product.images[0] || 'https://placehold.co/32x32'} className="size-8 rounded object-cover" alt={product.name} width={32} height={32}/>
+                                            <Image src={product.image || 'https://placehold.co/32x32'} className="size-8 rounded object-cover" alt={product.name} width={32} height={32}/>
                                             <span className="text-xs font-bold truncate">{product.name}</span>
                                         </Link>
                                     ))}
@@ -247,5 +234,3 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
 };
 
 export default Header;
-
-    

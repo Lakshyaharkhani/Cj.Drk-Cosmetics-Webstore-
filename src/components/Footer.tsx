@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import React from 'react';
 
@@ -19,7 +20,7 @@ const Footer: React.FC = () => (
                     <ul className="space-y-3 text-sm text-gray-500">
                         <li><Link href="/products" className="hover:text-primary transition-colors">All Products</Link></li>
                         <li><Link href="/products?category=soaps" className="hover:text-primary transition-colors">Soaps</Link></li>
-                        <li><Link href="/products?category=solid-perfumes" className="hover:text-primary transition-colors">Solid Perfumes</Link></li>
+                        <li><Link href="/products?category=perfumes" className="hover:text-primary transition-colors">Solid Perfumes</Link></li>
                     </ul>
                 </div>
                 <div>

@@ -1,45 +1,101 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
-import ProductDetails from '../../../components/ProductDetails';
-import { Star } from 'lucide-react';
+import { Star, Minus, Plus } from 'lucide-react';
 import ProductLoadingPage from './loading';
-import { useDoc, useFirestore, useMemoFirebase } from '../../../firebase';
-import { doc, DocumentData } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { MOCK_PRODUCTS } from '@/lib/constants';
+import { Product } from '@/lib/types';
+import { useCart } from '@/context/CartContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-interface Product extends DocumentData {
-    id: string;
-    name: string;
-    description: string;
-    images: string[];
-    category: string;
-    specifications: Record<string, string>;
-    rating: number;
-    reviewCount: number;
+function ProductDetails({ product }: { product: Product }) {
+  const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+  
+  const handleAddToCart = () => {
+    const cartProduct = { ...product, images: [product.image], brand: 'Cj.Drk' };
+    addToCart(cartProduct, quantity);
+  };
+
+  return (
+    <div className="flex flex-col gap-8">
+        <div className="space-y-4">
+            <Badge variant="secondary">{product.category}</Badge>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">{product.name}</h1>
+            <div className="flex items-center gap-4">
+                <div className="flex text-primary">
+                    {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                    ))}
+                </div>
+                <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{product.reviews} verified reviews</span>
+            </div>
+        </div>
+
+        <div className="flex items-baseline gap-4 border-b border-gray-100 dark:border-gray-800 pb-8">
+            <span className="text-4xl font-black text-primary">Rs {product.price.toFixed(2)}</span>
+            {product.originalPrice && <span className="text-xl text-gray-400 line-through decoration-red-400/50">Rs {product.originalPrice.toFixed(2)}</span>}
+        </div>
+
+        <div className="space-y-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">Description</h3>
+            <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">{product.description}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <div className="flex items-center rounded-2xl border-2 border-gray-100 dark:border-gray-800 h-16 bg-white dark:bg-gray-800 overflow-hidden">
+                <Button variant="ghost" onClick={() => setQuantity(q => Math.max(1, q - 1))} className="px-6 text-gray-400 hover:text-primary transition-colors h-full rounded-none"><Minus className="h-5 w-5" /></Button>
+                <span className="w-8 text-center font-black text-lg">{quantity}</span>
+                <Button variant="ghost" onClick={() => setQuantity(q => q + 1)} className="px-6 text-gray-400 hover:text-primary transition-colors h-full rounded-none"><Plus className="h-5 w-5" /></Button>
+            </div>
+            <Button
+                onClick={handleAddToCart}
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-black rounded-2xl h-16 px-10 shadow-xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+            >
+                <span className="material-symbols-outlined">add_shopping_cart</span> Add to Bag
+            </Button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
+                <span className="material-symbols-outlined text-primary">local_shipping</span>
+                Fast, Carbon-Neutral Shipping
+            </div>
+            <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
+                <span className="material-symbols-outlined text-primary">verified_user</span>
+                100% Organic Ingredients
+            </div>
+        </div>
+    </div>
+  );
 }
 
-function ProductPageContent() {
+export default function ProductPage() {
   const params = useParams();
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const firestore = useFirestore();
-
-  const productRef = useMemoFirebase(() => productId ? doc(firestore, 'products', productId) : null, [firestore, productId]);
-  const { data: product, isLoading } = useDoc<Product>(productRef);
-
+  
+  const product = MOCK_PRODUCTS.find(p => p.id === productId);
+  
   const [selectedImage, setSelectedImage] = useState(0);
 
-  if (isLoading) {
-    return <ProductLoadingPage />;
-  }
-
   if (!product) {
+    // In a real app, you might fetch data here or show a loading state
+    // For this mock setup, we'll assume the product is always found if the page is visited
+    // If not, we can show a not found page.
+    const [isLoading, setIsLoading] = useState(true);
+    if(isLoading){
+        return <ProductLoadingPage />;
+    }
     notFound();
   }
+  
+  const allImages = [product.image, ...product.thumbnails];
 
   const handleThumbnailClick = (index: number) => {
     setSelectedImage(index);
@@ -52,7 +108,7 @@ function ProductPageContent() {
         <div>
           <div className="aspect-square w-full overflow-hidden rounded-lg border">
             <Image
-              src={product.images[selectedImage]}
+              src={allImages[selectedImage]}
               alt={product.name}
               data-ai-hint={`${product.category} product`}
               width={600}
@@ -62,7 +118,7 @@ function ProductPageContent() {
             />
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
-            {product.images.map((img, index) => (
+            {allImages.map((img, index) => (
               <div
                 key={index}
                 className={cn(
@@ -97,21 +153,26 @@ function ProductPageContent() {
                     {product.description}
                 </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="specifications">
-                <AccordionTrigger><h3 className="font-headline text-2xl">Specifications</h3></AccordionTrigger>
+            {product.ingredients &&
+            <AccordionItem value="ingredients">
+                <AccordionTrigger><h3 className="font-headline text-2xl">Ingredients</h3></AccordionTrigger>
                 <AccordionContent>
-                    <table className="w-full text-left">
-                        <tbody>
-                            {Object.entries(product.specifications).map(([key, value]) => (
-                                <tr key={key} className="border-b">
-                                    <td className="py-2 pr-4 font-medium">{key}</td>
-                                    <td className="py-2">{value}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <p>{product.ingredients}</p>
                 </AccordionContent>
             </AccordionItem>
+            }
+             {product.scentNotes &&
+            <AccordionItem value="scent">
+                <AccordionTrigger><h3 className="font-headline text-2xl">Scent Profile</h3></AccordionTrigger>
+                <AccordionContent>
+                    <ul className="list-disc pl-5">
+                        <li><strong>Top:</strong> {product.scentNotes.top}</li>
+                        <li><strong>Middle:</strong> {product.scentNotes.middle}</li>
+                        <li><strong>Base:</strong> {product.scentNotes.base}</li>
+                    </ul>
+                </AccordionContent>
+            </AccordionItem>
+            }
         </Accordion>
       </div>
 
@@ -123,7 +184,7 @@ function ProductPageContent() {
                 <div className="flex items-center text-4xl font-bold">
                     {product.rating.toFixed(1)} <Star className="ml-2 h-8 w-8 fill-yellow-400 text-yellow-400" />
                 </div>
-                <p className="text-muted-foreground">Based on {product.reviewCount} reviews</p>
+                <p className="text-muted-foreground">Based on {product.reviews} reviews</p>
             </div>
             {/* Mock Reviews - In a real app, these would come from Firestore */}
             <div className="space-y-6">
@@ -134,7 +195,7 @@ function ProductPageContent() {
                         </div>
                         <p className="ml-auto font-medium">Rahul V.</p>
                     </div>
-                    <p className="text-muted-foreground">Excellent sound quality and noise cancellation. Worth every penny!</p>
+                    <p className="text-muted-foreground">Excellent! Worth every penny!</p>
                 </div>
                 <div className="border-t pt-6">
                     <div className="flex items-center mb-2">
@@ -143,21 +204,11 @@ function ProductPageContent() {
                         </div>
                         <p className="ml-auto font-medium">Priya S.</p>
                     </div>
-                    <p className="text-muted-foreground">Great battery life, but the fit could be a bit more snug for me.</p>
+                    <p className="text-muted-foreground">Great, but the fit could be a bit more snug for me.</p>
                 </div>
             </div>
         </div>
       </div>
     </div>
   );
-}
-
-export default function ProductPage() {
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
-
-    return isClient ? <ProductPageContent /> : <ProductLoadingPage />;
 }

@@ -3,23 +3,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCart, Product as CartProduct } from '../context/CartContext';
+import { useCart } from '../context/CartContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { DocumentData } from 'firebase/firestore';
 import React from 'react';
-
-interface Product extends DocumentData {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string; // Changed from images: string[]
-  rating: number;
-  reviewCount: number;
-  category: string;
-  stockStatus: 'In Stock' | 'Low Stock' | 'Out of Stock';
-}
+import { Product } from '@/lib/types';
+import { Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -27,19 +16,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { id, name, price, originalPrice, image, rating, reviewCount, category, stockStatus } = product;
+  const { id, name, price, originalPrice, image, rating, reviews, category } = product;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // The product object for the cart needs an 'images' array.
-    const cartProduct = { ...product, images: [product.image] };
-    addToCart(cartProduct as CartProduct);
+    const cartProduct = { ...product, images: [product.image], brand: 'Cj.Drk' };
+    addToCart(cartProduct, 1);
   };
 
   const imageUrl = image && typeof image === 'string' ? image : 'https://picsum.photos/seed/placeholder/400/400';
 
   return (
-    <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg">
+    <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg h-full">
       <Link href={`/product/${id}`} className="relative block">
         <div className="aspect-square w-full overflow-hidden">
           <Image
@@ -51,28 +39,28 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>
-        {stockStatus !== 'In Stock' && (
-             <Badge variant="destructive" className="absolute top-3 left-3">{stockStatus}</Badge>
+        {product.isBestSeller && (
+             <Badge variant="default" className="absolute top-3 left-3 bg-primary">Best Seller</Badge>
         )}
          {originalPrice && (
-          <Badge className="absolute top-3 right-3 bg-primary">Sale</Badge>
+          <Badge className="absolute top-3 right-3 bg-red-500">Sale</Badge>
         )}
       </Link>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-semibold text-lg">
+        <h3 className="font-semibold text-lg flex-grow">
           <Link href={`/product/${id}`}>{name}</Link>
         </h3>
         <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-base text-yellow-400 fill-current">star</span>
+            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
             {rating}
           </span>
-          <span>({reviewCount} reviews)</span>
+          <span>({reviews} reviews)</span>
         </div>
-        <div className="mt-4 flex-grow">
+        <div className="mt-4">
           <p className="text-xl font-bold">
-            Rs {price}
-            {originalPrice && <span className="ml-2 text-base font-normal text-muted-foreground line-through">Rs {originalPrice}</span>}
+            Rs {price.toFixed(2)}
+            {originalPrice && <span className="ml-2 text-base font-normal text-muted-foreground line-through">Rs {originalPrice.toFixed(2)}</span>}
           </p>
         </div>
         <div className="mt-4">

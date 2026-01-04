@@ -2,40 +2,29 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import ProductCard from '../../components/ProductCard';
 import ProductGridSkeleton from '../../components/ProductGridSkeleton';
-import { useCollection, useFirestore, useMemoFirebase } from '../../firebase';
-import { collection, DocumentData } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { MOCK_PRODUCTS } from '@/lib/constants';
+import { Product } from '@/lib/types';
 
-interface Product extends DocumentData {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  categorySlug: string;
-  price: number;
-}
-
-interface Category extends DocumentData {
-  id: string;
-  slug: string;
-  name: string;
-}
+const allCategories = [
+    { id: '1', slug: 'soaps', name: 'Soaps' },
+    { id: '2', slug: 'perfumes', name: 'Perfumes' },
+    { id: '3', slug: 'serums', name: 'Serums' },
+];
 
 const FiltersContent = ({
-  allCategories,
   selectedCategories,
   toggleCategory,
   maxPrice,
   setMaxPrice,
   absoluteMaxPrice,
 }: {
-  allCategories: Category[];
   selectedCategories: string[];
   toggleCategory: (slug: string) => void;
   maxPrice: number;
@@ -101,30 +90,27 @@ const FiltersContent = ({
 );
 
 export default function ProductsPage() {
-  const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const firestore = useFirestore();
-  const productsRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
-  const { data: allProducts, isLoading: isLoadingProducts } = useCollection<Product>(productsRef);
-
-  const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
-  const { data: allCategories, isLoading: isLoadingCategories } = useCollection<Category>(categoriesRef);
 
   const query = searchParams.get('q')?.toLowerCase() || '';
   const initialCategory = searchParams.get('category');
   
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategory ? [initialCategory] : []);
-  const [isClient, setIsClient] = useState(false);
-
-  const absoluteMaxPrice = useMemo(() => allProducts ? Math.max(...allProducts.map(p => p.price), 50) : 2000, [allProducts]);
+  
+  const absoluteMaxPrice = useMemo(() => Math.max(...MOCK_PRODUCTS.map(p => p.price), 50), []);
   const [maxPrice, setMaxPrice] = useState<number>(absoluteMaxPrice);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsClient(true);
+      // Simulate loading
+      const timer = setTimeout(() => {
+          setIsLoading(false);
+      }, 500);
+      return () => clearTimeout(timer);
   }, []);
+
 
   useEffect(() => {
       if (initialCategory) {
@@ -133,16 +119,15 @@ export default function ProductsPage() {
   }, [initialCategory]);
 
   const filteredProducts = useMemo(() => {
-    if (!allProducts) return [];
-    return allProducts.filter(p => {
+    return MOCK_PRODUCTS.filter(p => {
         const matchesQuery = query ? p.name.toLowerCase().includes(query) || 
                            p.description.toLowerCase().includes(query) ||
                            p.category.toLowerCase().includes(query) : true;
-        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.categorySlug);
+        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
         const matchesPrice = p.price <= maxPrice;
         return matchesQuery && matchesCategory && matchesPrice;
     });
-  }, [query, selectedCategories, maxPrice, allProducts]);
+  }, [query, selectedCategories, maxPrice]);
 
   const toggleCategory = (catSlug: string) => {
     if (catSlug === '__RESET__') {
@@ -155,14 +140,6 @@ export default function ProductsPage() {
     setSelectedCategories(newSelected);
   };
   
-  const clearSearch = () => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('q');
-      router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const isLoading = isLoadingProducts || isLoadingCategories;
-
   const currentCategoryName = useMemo(() => {
       if(query) return `Results for "${query}"`;
       if (selectedCategories.length === 1) {
@@ -170,22 +147,7 @@ export default function ProductsPage() {
       }
       if (selectedCategories.length > 1) return 'Multiple Categories';
       return 'All Essentials';
-  }, [query, selectedCategories, allCategories]);
-
-  if (!isClient) {
-    return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
-          <aside className="lg:col-span-1">
-            <ProductGridSkeleton.Filters />
-          </aside>
-          <main className="lg:col-span-3">
-            <ProductGridSkeleton.Grid />
-          </main>
-        </div>
-      </div>
-    );
-  }
+  }, [query, selectedCategories]);
 
   return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -195,14 +157,6 @@ export default function ProductsPage() {
                   <h1 className="text-4xl md:text-5xl font-black tracking-tight text-[#181311] dark:text-white">
                       {currentCategoryName}
                   </h1>
-                  {query && (
-                      <button
-                          onClick={clearSearch}
-                          className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-primary transition-colors"
-                      >
-                          <span className="material-symbols-outlined text-[14px]">close</span> Clear Search
-                      </button>
-                  )}
               </div>
               
               <div className="flex items-center gap-4">
@@ -223,7 +177,6 @@ export default function ProductsPage() {
               <aside className={`${isFiltersOpen ? 'block' : 'hidden'} lg:block w-full lg:w-72 flex-shrink-0`}>
                   <div className="sticky top-28 p-8 bg-white dark:bg-card rounded-3xl border border-gray-100 dark:border-border shadow-sm lg:shadow-none lg:bg-transparent lg:p-0">
                       <FiltersContent 
-                          allCategories={allCategories || []}
                           selectedCategories={selectedCategories}
                           toggleCategory={toggleCategory}
                           maxPrice={maxPrice}
@@ -264,7 +217,6 @@ export default function ProductsPage() {
                                   >
                                       Clear Filters
                                   </Button>
-                                  {query && <Button onClick={clearSearch}>Clear Search</Button>}
                               </div>
                           </div>
                       )}
@@ -275,5 +227,3 @@ export default function ProductsPage() {
       </main>
   );
 };
-
-    
