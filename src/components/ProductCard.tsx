@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -7,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import React from 'react';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/product-types';
 import { Star } from 'lucide-react';
 
 interface ProductCardProps {
@@ -16,16 +15,16 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const { id, name, price, originalPrice, image, rating, reviews, category } = product;
+  const { id, name, price, mrp, images, category_id, tags, rating, reviewCount } = product;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     addToCart(product, 1);
   };
 
-  const imageUrl = image && typeof image === 'string' ? image : 'https://picsum.photos/seed/placeholder/400/400';
+  const imageUrl = images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
   const effectiveRating = rating || 0;
-  const effectiveReviews = reviews || 0;
+  const effectiveReviews = reviewCount || 0;
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg h-full">
@@ -34,16 +33,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           <Image
             src={imageUrl}
             alt={name}
-            data-ai-hint={`${category} product`}
+            data-ai-hint={`${category_id} product`}
             width={400}
             height={400}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </div>
-        {product.isBestSeller && (
+        {tags?.includes('bestseller') && (
              <Badge variant="default" className="absolute top-3 left-3 bg-primary">Best Seller</Badge>
         )}
-         {originalPrice && (
+         {mrp && mrp > price && (
           <Badge className="absolute top-3 right-3 bg-red-500">Sale</Badge>
         )}
       </Link>
@@ -51,17 +50,19 @@ export default function ProductCard({ product }: ProductCardProps) {
         <h3 className="font-semibold text-lg flex-grow">
           <Link href={`/product/${id}`}>{name}</Link>
         </h3>
-        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            {effectiveRating}
-          </span>
-          <span>({effectiveReviews} reviews)</span>
-        </div>
+        {effectiveRating > 0 && (
+            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                {effectiveRating.toFixed(1)}
+            </span>
+            {effectiveReviews > 0 && <span>({effectiveReviews} reviews)</span>}
+            </div>
+        )}
         <div className="mt-4">
           <p className="text-xl font-bold">
             Rs {price.toFixed(2)}
-            {originalPrice && <span className="ml-2 text-base font-normal text-muted-foreground line-through">Rs {originalPrice.toFixed(2)}</span>}
+            {mrp && mrp > price && <span className="ml-2 text-base font-normal text-muted-foreground line-through">Rs {mrp.toFixed(2)}</span>}
           </p>
         </div>
         <div className="mt-4">
@@ -71,5 +72,3 @@ export default function ProductCard({ product }: ProductCardProps) {
     </div>
   );
 }
-
-    

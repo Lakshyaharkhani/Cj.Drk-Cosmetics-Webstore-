@@ -1,10 +1,12 @@
-
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from '../hooks/use-toast';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/product-types';
 
+// The Product interface from product-types is detailed.
+// We only need a subset for the cart item. Let's define it here.
+// But we also need to allow for the full product to be passed in.
 export interface CartItem extends Product {
   quantity: number;
 }
@@ -85,5 +87,3 @@ export const useCart = () => {
   }
   return context;
 };
-
-    

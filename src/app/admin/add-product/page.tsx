@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -15,23 +14,18 @@ import { PlusCircle, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, DocumentData } from 'firebase/firestore';
+import { collection, DocumentData, serverTimestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
   description: z.string().min(10, 'Description must be at least 10 characters.'),
   price: z.coerce.number().min(0, 'Price must be a positive number.'),
-  originalPrice: z.coerce.number().optional(),
-  brand: z.string().min(2, 'Brand is required.'),
-  categorySlug: z.string({ required_error: 'Please select a category.' }),
-  stockStatus: z.enum(['In Stock', 'Low Stock', 'Out of Stock']),
+  mrp: z.coerce.number().optional(),
+  category_id: z.string({ required_error: 'Please select a category.' }),
   images: z.array(z.string().url('Must be a valid URL')).min(1, 'At least one image URL is required.'),
-  features: z.array(z.object({ value: z.string().min(1, 'Feature cannot be empty.') })),
-  specifications: z.array(z.object({
-    key: z.string().min(1, 'Spec key cannot be empty.'),
-    value: z.string().min(1, 'Spec value cannot be empty.'),
-  })),
+  tags: z.array(z.object({ value: z.string().min(1, 'Tag cannot be empty.') })),
+  stock_quantity: z.coerce.number().min(0, 'Stock must be a positive number.'),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -46,22 +40,25 @@ const AddProductForm = () => {
     const { toast } = useToast();
     const firestore = useFirestore();
 
-    const categoriesRef = useMemoFirebase(() => collection(firestore, 'categories'), [firestore]);
-    const { data: categories } = useCollection<Category>(categoriesRef);
+    // In a real app, categories would also be managed in the admin dashboard.
+    // For now, we'll use a hardcoded list that matches our intended Firestore structure.
+    const categories: Category[] = [
+        { id: 'soaps', name: 'Soaps', slug: 'soaps' },
+        { id: 'perfumes', name: 'Perfumes', slug: 'perfumes' },
+        { id: 'serums', name: 'Serums', slug: 'serums' },
+    ];
 
     const form = useForm<ProductFormValues>({
         resolver: zodResolver(productSchema),
         defaultValues: {
-        name: '',
-        description: '',
-        price: 0,
-        originalPrice: undefined,
-        brand: '',
-        categorySlug: '',
-        stockStatus: 'In Stock',
-        images: [''],
-        features: [{ value: '' }],
-        specifications: [{ key: '', value: '' }],
+            name: '',
+            description: '',
+            price: 0,
+            mrp: undefined,
+            category_id: '',
+            images: [''],
+            tags: [{ value: '' }],
+            stock_quantity: 0,
         },
     });
 
@@ -70,33 +67,35 @@ const AddProductForm = () => {
         name: "images"
     });
 
-    const { fields: featureFields, append: appendFeature, remove: removeFeature } = useFieldArray({
+    const { fields: tagFields, append: appendTag, remove: removeTag } = useFieldArray({
         control: form.control,
-        name: "features"
-    });
-
-    const { fields: specFields, append: appendSpec, remove: removeSpec } = useFieldArray({
-        control: form.control,
-        name: "specifications"
+        name: "tags"
     });
 
 
     const onSubmit = async (data: ProductFormValues) => {
         try {
             const productsRef = collection(firestore, 'products');
-            const categoryDoc = categories?.find(c => c.slug === data.categorySlug);
-
+            
             const productData = {
-            ...data,
-            category: categoryDoc ? categoryDoc.name : 'Uncategorized',
-            features: data.features.map(f => f.value),
-            specifications: data.specifications.reduce((acc, spec) => {
-                acc[spec.key] = spec.value;
-                return acc;
-            }, {} as Record<string, string>),
-            rating: 0, // Initial rating
-            reviewCount: 0, // Initial review count
-            createdAt: new Date(),
+              active: true,
+              name: data.name,
+              slug: data.name.toLowerCase().replace(/\s+/g, '-'),
+              description: data.description,
+              price: data.price,
+              mrp: data.mrp || data.price,
+              currency: 'INR',
+              category_id: data.category_id,
+              images: data.images,
+              tags: data.tags.map(t => t.value),
+              stock_quantity: data.stock_quantity,
+              // Adding default values for fields not in the form
+              weight_kg: 0.12, 
+              dimensions: { length_cm: 8, breadth_cm: 6, height_cm: 2.5 },
+              has_variants: false,
+              sku: `CJD-${data.category_id.toUpperCase()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+              created_at: serverTimestamp(),
+              updated_at: serverTimestamp(),
             };
 
             await addDocumentNonBlocking(productsRef, productData);
@@ -108,8 +107,7 @@ const AddProductForm = () => {
             form.reset();
             // Reset field arrays
             form.setValue('images', ['']);
-            form.setValue('features', [{value: ''}]);
-            form.setValue('specifications', [{key: '', value: ''}]);
+            form.setValue('tags', [{value: ''}]);
         } catch (error: any) {
             toast({
                 title: 'Error',
@@ -124,7 +122,7 @@ const AddProductForm = () => {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField control={form.control} name="name" render={({ field }) => (
-                <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} placeholder="e.g., AeroSound Pro TWS Earbuds" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Product Name</FormLabel><FormControl><Input {...field} placeholder="e.g., Charcoal & Tea Tree Soap" /></FormControl><FormMessage /></FormItem>
               )} />
               
               <FormField control={form.control} name="description" render={({ field }) => (
@@ -133,18 +131,15 @@ const AddProductForm = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormField control={form.control} name="price" render={({ field }) => (
-                  <FormItem><FormLabel>Price (Rs)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem><FormLabel>Price (INR)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
-                <FormField control={form.control} name="originalPrice" render={({ field }) => (
-                  <FormItem><FormLabel>Original Price (Optional, Rs)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormField control={form.control} name="mrp" render={({ field }) => (
+                  <FormItem><FormLabel>MRP (Optional, INR)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField control={form.control} name="brand" render={({ field }) => (
-                  <FormItem><FormLabel>Brand</FormLabel><FormControl><Input {...field} placeholder="e.g., AeroSound" /></FormControl><FormMessage /></FormItem>
-                )} />
-                 <FormField control={form.control} name="categorySlug" render={({ field }) => (
+                <FormField control={form.control} name="category_id" render={({ field }) => (
                     <FormItem>
                         <FormLabel>Category</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -158,23 +153,11 @@ const AddProductForm = () => {
                         <FormMessage />
                     </FormItem>
                  )} />
+                 <FormField control={form.control} name="stock_quantity" render={({ field }) => (
+                  <FormItem><FormLabel>Stock Quantity</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                )} />
               </div>
               
-              <FormField control={form.control} name="stockStatus" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stock Status</FormLabel>
-                   <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl><SelectTrigger><SelectValue placeholder="Select stock status" /></SelectTrigger></FormControl>
-                        <SelectContent>
-                            <SelectItem value="In Stock">In Stock</SelectItem>
-                            <SelectItem value="Low Stock">Low Stock</SelectItem>
-                            <SelectItem value="Out of Stock">Out of Stock</SelectItem>
-                        </SelectContent>
-                    </Select>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
             <div>
                 <FormLabel>Image URLs</FormLabel>
                 {imageFields.map((field, index) => (
@@ -184,7 +167,7 @@ const AddProductForm = () => {
                     name={`images.${index}`}
                     render={({ field }) => (
                         <FormItem className="flex items-center gap-2 mt-2">
-                            <FormControl><Input {...field} placeholder="https://placehold.co/600x600" /></FormControl>
+                            <FormControl><Input {...field} placeholder="https://picsum.photos/seed/p1/600/600" /></FormControl>
                             {imageFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeImage(index)}><Trash2/></Button>}
                         </FormItem>
                     )}
@@ -196,43 +179,24 @@ const AddProductForm = () => {
             </div>
             
             <div>
-                <FormLabel>Features</FormLabel>
-                {featureFields.map((field, index) => (
+                <FormLabel>Tags</FormLabel>
+                {tagFields.map((field, index) => (
                     <FormField
                     key={field.id}
                     control={form.control}
-                    name={`features.${index}.value`}
+                    name={`tags.${index}.value`}
                     render={({ field }) => (
                         <FormItem className="flex items-center gap-2 mt-2">
-                        <FormControl><Input {...field} placeholder="e.g., Active Noise Cancellation" /></FormControl>
-                        {featureFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeFeature(index)}><Trash2/></Button>}
+                        <FormControl><Input {...field} placeholder="e.g., detox" /></FormControl>
+                        {tagFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeTag(index)}><Trash2/></Button>}
                         </FormItem>
                     )}
                     />
                 ))}
-                 <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendFeature({ value: '' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Feature
+                 <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendTag({ value: '' })}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Tag
                 </Button>
             </div>
-            
-            <div>
-                <FormLabel>Specifications</FormLabel>
-                {specFields.map((field, index) => (
-                    <div key={field.id} className="flex items-center gap-2 mt-2">
-                    <FormField control={form.control} name={`specifications.${index}.key`} render={({ field }) => (
-                        <FormItem className="flex-1"><FormControl><Input {...field} placeholder="e.g., Bluetooth Version" /></FormControl></FormItem>
-                    )} />
-                     <FormField control={form.control} name={`specifications.${index}.value`} render={({ field }) => (
-                        <FormItem className="flex-1"><FormControl><Input {...field} placeholder="e.g., 5.3" /></FormControl></FormItem>
-                    )} />
-                    {specFields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => removeSpec(index)}><Trash2/></Button>}
-                    </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => appendSpec({ key: '', value: '' })}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Specification
-                </Button>
-            </div>
-
 
               <Button type="submit" size="lg" className="w-full" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Adding Product...' : 'Add Product'}
@@ -279,5 +243,3 @@ export default function AdminProductUploadPage() {
         </div>
     );
 }
-
-    

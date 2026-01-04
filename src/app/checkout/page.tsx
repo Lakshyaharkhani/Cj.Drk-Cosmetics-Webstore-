@@ -16,7 +16,6 @@ import Image from 'next/image';
 import { CreditCard, Truck, ChevronRight } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Product } from '@/lib/types';
 
 const shippingSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -86,10 +85,10 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    if (cartCount === 0) {
+    if (cartCount === 0 && !isProcessing) {
       router.push('/products');
     }
-  }, [cartCount, router]);
+  }, [cartCount, router, isProcessing]);
 
   if (cartCount === 0) {
     return null;
@@ -118,7 +117,7 @@ export default function CheckoutPage() {
                         {cartItems.map(item => (
                              <div key={item.id} className="flex gap-4 items-center">
                                 <div className="relative w-16 h-16 rounded-lg overflow-hidden border bg-white">
-                                    <Image src={item.image} alt={item.name} width={64} height={64} className="w-full h-full object-cover" />
+                                    <Image src={item.images[0]} alt={item.name} width={64} height={64} className="w-full h-full object-cover" />
                                     <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-[10px] size-5 flex items-center justify-center rounded-full">{item.quantity}</span>
                                 </div>
                                 <div className="flex-1"><p className="text-sm font-bold truncate">{item.name}</p></div>
@@ -254,5 +253,3 @@ export default function CheckoutPage() {
     </>
   );
 }
-
-    

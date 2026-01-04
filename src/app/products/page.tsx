@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -9,16 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { MOCK_PRODUCTS } from '@/lib/constants';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/product-types';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, DocumentData, query, where, Query } from 'firebase/firestore';
-
-const allCategories = [
-    { id: '1', slug: 'soaps', name: 'Soaps' },
-    { id: '2', slug: 'perfumes', name: 'Perfumes' },
-    { id: '3', slug: 'serums', name: 'Serums' },
-];
 
 const FiltersContent = ({
   selectedCategories,
@@ -26,12 +18,14 @@ const FiltersContent = ({
   maxPrice,
   setMaxPrice,
   absoluteMaxPrice,
+  allCategories
 }: {
   selectedCategories: string[];
   toggleCategory: (slug: string) => void;
   maxPrice: number;
   setMaxPrice: (price: number) => void;
   absoluteMaxPrice: number;
+  allCategories: {id: string, name: string}[];
 }) => (
   <div className="space-y-10">
     <section>
@@ -53,11 +47,11 @@ const FiltersContent = ({
         {allCategories.map((cat) => (
           <div key={cat.id} className="flex items-center">
             <Checkbox
-              id={`cat-${cat.slug}`}
-              checked={selectedCategories.includes(cat.slug)}
-              onCheckedChange={() => toggleCategory(cat.slug)}
+              id={`cat-${cat.id}`}
+              checked={selectedCategories.includes(cat.id)}
+              onCheckedChange={() => toggleCategory(cat.id)}
             />
-            <Label htmlFor={`cat-${cat.slug}`} className="ml-3 text-sm font-semibold text-gray-600 dark:text-gray-300 capitalize cursor-pointer">
+            <Label htmlFor={`cat-${cat.id}`} className="ml-3 text-sm font-semibold text-gray-600 dark:text-gray-300 capitalize cursor-pointer">
               {cat.name}
             </Label>
           </div>
@@ -104,15 +98,19 @@ export default function ProductsPage() {
   const [maxPrice, setMaxPrice] = useState<number>(absoluteMaxPrice);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   
-  const productsQuery = useMemoFirebase(() => {
-    let q: Query<DocumentData> = collection(firestore, 'products');
-    if (selectedCategories.length > 0) {
-      q = query(q, where('category_id', 'in', selectedCategories));
-    }
-    return q;
-  }, [firestore, selectedCategories]);
+  const productsCollectionRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const { data: allProducts, isLoading } = useCollection<Product>(productsCollectionRef);
   
-  const { data: products, isLoading } = useCollection<Product>(productsQuery);
+  const allCategories = useMemo(() => {
+    if (!allProducts) return [];
+    const categoriesMap = new Map<string, string>();
+    allProducts.forEach(p => {
+        if (!categoriesMap.has(p.category_id)) {
+            categoriesMap.set(p.category_id, p.category_id.charAt(0).toUpperCase() + p.category_id.slice(1));
+        }
+    });
+    return Array.from(categoriesMap, ([id, name]) => ({ id, name }));
+  }, [allProducts]);
 
   useEffect(() => {
       if (initialCategory) {
@@ -121,24 +119,27 @@ export default function ProductsPage() {
   }, [initialCategory]);
 
   useEffect(() => {
-    if (products && products.length > 0) {
-        const maxProductPrice = Math.max(...products.map(p => p.price), 0);
-        setAbsoluteMaxPrice(maxProductPrice);
-        setMaxPrice(maxProductPrice);
+    if (allProducts && allProducts.length > 0) {
+        const maxProductPrice = Math.ceil(Math.max(...allProducts.map(p => p.price), 0) / 100) * 100;
+        if(maxProductPrice > 0) {
+          setAbsoluteMaxPrice(maxProductPrice);
+          setMaxPrice(maxProductPrice);
+        }
     }
-  }, [products]);
+  }, [allProducts]);
 
 
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(p => {
+    if (!allProducts) return [];
+    return allProducts.filter(p => {
         const matchesQuery = queryParam ? p.name.toLowerCase().includes(queryParam) || 
                            p.description.toLowerCase().includes(queryParam) ||
                            p.category_id.toLowerCase().includes(queryParam) : true;
+        const matchesCategory = selectedCategories.length > 0 ? selectedCategories.includes(p.category_id) : true;
         const matchesPrice = p.price <= maxPrice;
-        return matchesQuery && matchesPrice;
+        return matchesQuery && matchesPrice && matchesCategory;
     });
-  }, [products, queryParam, maxPrice]);
+  }, [allProducts, queryParam, maxPrice, selectedCategories]);
 
   const toggleCategory = (catSlug: string) => {
     if (catSlug === '__RESET__') {
@@ -154,11 +155,11 @@ export default function ProductsPage() {
   const currentCategoryName = useMemo(() => {
       if(queryParam) return `Results for "${queryParam}"`;
       if (selectedCategories.length === 1) {
-          return allCategories?.find(c => c.slug === selectedCategories[0])?.name || 'All Essentials';
+          return allCategories?.find(c => c.id === selectedCategories[0])?.name || 'All Essentials';
       }
       if (selectedCategories.length > 1) return 'Multiple Categories';
       return 'All Essentials';
-  }, [queryParam, selectedCategories]);
+  }, [queryParam, selectedCategories, allCategories]);
 
   return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -193,6 +194,7 @@ export default function ProductsPage() {
                           maxPrice={maxPrice}
                           setMaxPrice={setMaxPrice}
                           absoluteMaxPrice={absoluteMaxPrice}
+                          allCategories={allCategories}
                       />
                   </div>
               </aside>
@@ -238,5 +240,3 @@ export default function ProductsPage() {
       </main>
   );
 };
-
-    

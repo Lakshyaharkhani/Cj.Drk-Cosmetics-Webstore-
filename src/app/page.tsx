@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -8,7 +7,7 @@ import placeholderImages from '../lib/placeholder-images.json';
 import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
 import { collection, DocumentData, query, limit } from 'firebase/firestore';
 import ProductCard from '@/components/ProductCard';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/product-types';
 
 const valueProps = [
   { icon: 'water_drop', title: 'Cold Pressed', description: 'Retaining all natural nutrients' },
@@ -17,8 +16,32 @@ const valueProps = [
   { icon: 'recycling', title: 'Plastic-Free', description: 'Sustainable packaging' }
 ];
 
+const categories = [
+    {
+      "name": "Artisan Soaps",
+      "slug": "soaps",
+      "src": "https://picsum.photos/seed/c1/600/800",
+      "alt": "Stack of handmade artisan soaps with rustic textures",
+      "hint": "artisan soap"
+    },
+    {
+      "name": "Radiant Serums",
+      "slug": "serums",
+      "src": "https://picsum.photos/seed/c2/600/800",
+      "alt": "Minimalist bottle of radiant serum on a beige background",
+      "hint": "serum bottle"
+    },
+    {
+      "name": "Solid Perfumes",
+      "slug": "perfumes",
+      "src": "https://picsum.photos/seed/c3/600/800",
+      "alt": "Solid perfume tins displayed on a wooden surface",
+      "hint": "perfume tin"
+    }
+];
+
 export default function Home() {
-  const { hero, categories } = placeholderImages;
+  const { hero } = placeholderImages;
   
   const firestore = useFirestore();
   const productsRef = useMemoFirebase(() => query(collection(firestore, 'products'), limit(4)), [firestore]);
@@ -117,5 +140,3 @@ export default function Home() {
     </>
   );
 }
-
-    

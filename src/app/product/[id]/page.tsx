@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '..
 import { Star, Minus, Plus } from 'lucide-react';
 import ProductLoadingPage from './loading';
 import { cn } from '@/lib/utils';
-import { Product } from '@/lib/types';
+import { Product } from '@/lib/product-types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,26 +23,30 @@ function ProductDetails({ product }: { product: Product }) {
   };
 
   const rating = product.rating || 0;
-  const reviews = product.reviews || 0;
+  const reviews = product.reviewCount || 0;
 
   return (
     <div className="flex flex-col gap-8">
         <div className="space-y-4">
-            <Badge variant="secondary">{product.category}</Badge>
+            <Badge variant="secondary">{product.category_id}</Badge>
             <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1]">{product.name}</h1>
             <div className="flex items-center gap-4">
-                <div className="flex text-primary">
-                    {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(rating) ? 'fill-current' : ''}`} />
-                    ))}
-                </div>
-                <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{reviews} verified reviews</span>
+                {rating > 0 && (
+                    <>
+                        <div className="flex text-primary">
+                            {[...Array(5)].map((_, i) => (
+                                <Star key={i} className={`h-5 w-5 ${i < Math.floor(rating) ? 'fill-current' : ''}`} />
+                            ))}
+                        </div>
+                        {reviews > 0 && <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{reviews} verified reviews</span>}
+                    </>
+                )}
             </div>
         </div>
 
         <div className="flex items-baseline gap-4 border-b border-gray-100 dark:border-gray-800 pb-8">
             <span className="text-4xl font-black text-primary">Rs {product.price.toFixed(2)}</span>
-            {product.originalPrice && <span className="text-xl text-gray-400 line-through decoration-red-400/50">Rs {product.originalPrice.toFixed(2)}</span>}
+            {product.mrp && <span className="text-xl text-gray-400 line-through decoration-red-400/50">Rs {product.mrp.toFixed(2)}</span>}
         </div>
 
         <div className="space-y-4">
@@ -103,7 +106,7 @@ export default function ProductPage() {
     notFound();
   }
   
-  const allImages = [product.image, ...product.thumbnails].filter(Boolean);
+  const allImages = product.images || [];
 
   const handleThumbnailClick = (index: number) => {
     setSelectedImage(index);
@@ -118,7 +121,7 @@ export default function ProductPage() {
             <Image
               src={allImages[selectedImage] || 'https://placehold.co/600x600'}
               alt={product.name}
-              data-ai-hint={`${product.category} product`}
+              data-ai-hint={`${product.category_id} product`}
               width={600}
               height={600}
               className="h-full w-full object-cover"
@@ -153,73 +156,47 @@ export default function ProductPage() {
         <ProductDetails product={product} />
       </div>
 
-      {/* Detailed Info Section */}
-      <div className="mt-16">
-        <Accordion type="single" collapsible defaultValue="description" className="w-full">
-            <AccordionItem value="description">
-                <AccordionTrigger><h3 className="font-headline text-2xl">Description</h3></AccordionTrigger>
-                <AccordionContent className="text-base leading-relaxed">
-                    {product.description}
-                </AccordionContent>
-            </AccordionItem>
-            {product.ingredients &&
-            <AccordionItem value="ingredients">
-                <AccordionTrigger><h3 className="font-headline text-2xl">Ingredients</h3></AccordionTrigger>
-                <AccordionContent>
-                    <p>{product.ingredients}</p>
-                </AccordionContent>
-            </AccordionItem>
-            }
-             {product.scentNotes &&
-            <AccordionItem value="scent">
-                <AccordionTrigger><h3 className="font-headline text-2xl">Scent Profile</h3></AccordionTrigger>
-                <AccordionContent>
-                    <ul className="list-disc pl-5">
-                        <li><strong>Top:</strong> {product.scentNotes.top}</li>
-                        <li><strong>Middle:</strong> {product.scentNotes.middle}</li>
-                        <li><strong>Base:</strong> {product.scentNotes.base}</li>
-                    </ul>
-                </AccordionContent>
-            </AccordionItem>
-            }
-        </Accordion>
-      </div>
-
        {/* Customer Reviews Section */}
        <div className="mt-16">
         <h3 className="font-headline text-3xl mb-8">Customer Reviews</h3>
         <div className="rounded-lg border bg-card p-6">
-            <div className="flex items-center gap-4 mb-6">
-                <div className="flex items-center text-4xl font-bold">
-                    {(product.rating || 0).toFixed(1)} <Star className="ml-2 h-8 w-8 fill-yellow-400 text-yellow-400" />
-                </div>
-                <p className="text-muted-foreground">Based on {product.reviews || 0} reviews</p>
-            </div>
-            {/* Mock Reviews - In a real app, these would come from Firestore */}
-            <div className="space-y-6">
-                <div className="border-t pt-6">
-                    <div className="flex items-center mb-2">
-                        <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => <Star key={i} className={`h-5 w-5 ${i < 5 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />)}
+            {product.rating && product.reviewCount && product.reviewCount > 0 ? (
+                <>
+                    <div className="flex items-center gap-4 mb-6">
+                        <div className="flex items-center text-4xl font-bold">
+                            { product.rating.toFixed(1) } <Star className="ml-2 h-8 w-8 fill-yellow-400 text-yellow-400" />
                         </div>
-                        <p className="ml-auto font-medium">Rahul V.</p>
+                        <p className="text-muted-foreground">Based on {product.reviewCount} reviews</p>
                     </div>
-                    <p className="text-muted-foreground">Excellent! Worth every penny!</p>
-                </div>
-                <div className="border-t pt-6">
-                    <div className="flex items-center mb-2">
-                        <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => <Star key={i} className={`h-5 w-5 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />)}
+                    {/* In a real app, these would come from a 'reviews' subcollection */}
+                    <div className="space-y-6">
+                        <div className="border-t pt-6">
+                            <div className="flex items-center mb-2">
+                                <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => <Star key={i} className={`h-5 w-5 ${i < 5 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />)}
+                                </div>
+                                <p className="ml-auto font-medium">Rahul V.</p>
+                            </div>
+                            <p className="text-muted-foreground">Excellent! Worth every penny!</p>
                         </div>
-                        <p className="ml-auto font-medium">Priya S.</p>
+                        <div className="border-t pt-6">
+                            <div className="flex items-center mb-2">
+                                <div className="flex items-center">
+                                    {[...Array(5)].map((_, i) => <Star key={i} className={`h-5 w-5 ${i < 4 ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />)}
+                                </div>
+                                <p className="ml-auto font-medium">Priya S.</p>
+                            </div>
+                            <p className="text-muted-foreground">Great, but the fit could be a bit more snug for me.</p>
+                        </div>
                     </div>
-                    <p className="text-muted-foreground">Great, but the fit could be a bit more snug for me.</p>
+                </>
+            ) : (
+                <div className="text-center py-10">
+                    <p className="text-muted-foreground">No reviews yet for this product.</p>
                 </div>
-            </div>
+            )}
         </div>
       </div>
     </div>
   );
 }
-
-    

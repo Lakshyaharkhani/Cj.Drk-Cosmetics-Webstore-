@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -7,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useUser } from '../firebase';
 import Image from 'next/image';
-import { MOCK_PRODUCTS } from '../lib/constants';
-import { Product } from '../lib/types';
+import { Product } from '../lib/product-types';
 
 const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     const { cartCount } = useCart();
@@ -16,24 +14,12 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     const router = useRouter();
     const [search, setSearch] = useState('');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    
+    // Live search is disabled as it requires a proper backend search index for performance.
+    // The previous implementation was based on mock data.
     const [suggestions, setSuggestions] = useState<Product[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
-
-    // Handle live search suggestions
-    useEffect(() => {
-        if (search.trim().length >= 2) {
-            const matches = MOCK_PRODUCTS.filter(p => 
-                p.name.toLowerCase().includes(search.toLowerCase()) ||
-                p.category.toLowerCase().includes(search.toLowerCase())
-            ).slice(0, 5);
-            setSuggestions(matches);
-            setShowSuggestions(true);
-        } else {
-            setSuggestions([]);
-            setShowSuggestions(false);
-        }
-    }, [search]);
 
     // Close suggestions when clicking outside
     useEffect(() => {
@@ -110,43 +96,12 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                                     <input 
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        onFocus={() => search.trim().length >= 2 && setShowSuggestions(true)}
                                         className="bg-gray-100 dark:bg-gray-800 border-none rounded-md px-4 py-2 text-sm w-48 focus:ring-1 focus:ring-primary focus:w-64 transition-all duration-300" 
                                         placeholder="Search..." 
                                         type="text" 
                                     />
                                     <button type="submit" className="material-symbols-outlined absolute right-3 top-2 text-gray-400 text-lg hover:text-primary">search</button>
                                 </form>
-                                
-                                {showSuggestions && suggestions.length > 0 && (
-                                    <div className="absolute top-full mt-2 left-0 w-80 bg-white dark:bg-gray-900 shadow-2xl rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <div className="p-3 border-b border-gray-50 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Products</span>
-                                        </div>
-                                        <div className="max-h-96 overflow-y-auto">
-                                            {suggestions.map(product => (
-                                                <Link 
-                                                    key={product.id}
-                                                    href={`/product/${product.id}`}
-                                                    onClick={() => { setShowSuggestions(false); setSearch(''); }}
-                                                    className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                                >
-                                                    <Image src={product.image || 'https://placehold.co/40x40'} className="size-10 rounded-lg object-cover bg-gray-100" alt={product.name} width={40} height={40} />
-                                                    <div className="flex-1">
-                                                        <p className="text-xs font-bold truncate">{product.name}</p>
-                                                        <p className="text-[10px] text-primary font-medium">Rs {product.price.toFixed(2)}</p>
-                                                    </div>
-                                                </Link>
-                                            ))}
-                                        </div>
-                                        <button 
-                                            onClick={handleSearch}
-                                            className="w-full p-3 text-center text-xs font-bold text-gray-500 hover:text-primary border-t border-gray-50 dark:border-gray-800 transition-colors"
-                                        >
-                                            View all results
-                                        </button>
-                                    </div>
-                                )}
                             </div>
 
                             <Link href="/cart" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors relative">
@@ -194,22 +149,6 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                                 />
                                 <button type="submit" className="material-symbols-outlined absolute right-3 top-3 text-gray-400">search</button>
                             </form>
-                            
-                            {showSuggestions && suggestions.length > 0 && (
-                                <div className="absolute top-full mt-2 left-0 w-full bg-white dark:bg-gray-900 shadow-xl rounded-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-10">
-                                    {suggestions.map(product => (
-                                        <Link 
-                                            key={product.id}
-                                            href={`/product/${product.id}`}
-                                            onClick={() => { setIsMenuOpen(false); setShowSuggestions(false); setSearch(''); }}
-                                            className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                        >
-                                            <Image src={product.image || 'https://placehold.co/32x32'} className="size-8 rounded object-cover" alt={product.name} width={32} height={32}/>
-                                            <span className="text-xs font-bold truncate">{product.name}</span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
                         </div>
 
                         <nav className="flex flex-col gap-4">

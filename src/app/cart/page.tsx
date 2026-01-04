@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/context/CartContext';
 import { Button } from '../../components/ui/button';
-import { Product } from '@/lib/types';
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeFromCart, cartTotal } = useCart();
@@ -33,7 +32,7 @@ export default function CartPage() {
                 <div key={item.id} className="flex gap-6 py-8">
                   <div className="shrink-0 w-24 h-24 sm:w-32 rounded-xl overflow-hidden bg-gray-100">
                     <Image 
-                      src={item.image} 
+                      src={item.images[0]} 
                       alt={item.name} 
                       width={128}
                       height={128}
@@ -44,7 +43,7 @@ export default function CartPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="text-lg font-bold leading-tight">{item.name}</h3>
-                        <p className="text-sm text-gray-500 capitalize">{item.category}</p>
+                        <p className="text-sm text-gray-500 capitalize">{item.category_id}</p>
                       </div>
                       <p className="text-lg font-semibold">Rs {(item.price * item.quantity).toFixed(2)}</p>
                     </div>
@@ -103,5 +102,3 @@ export default function CartPage() {
     </main>
   );
 }
-
-    
