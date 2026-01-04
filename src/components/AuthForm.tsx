@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth, useUser } from '@/firebase';
+import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +30,6 @@ const signupSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type SignupFormValues = z.infer<typeof signupSchema>;
 
-
 const formVariants = {
   hidden: { opacity: 0, x: -50 },
   visible: { opacity: 1, x: 0 },
@@ -37,6 +38,9 @@ const formVariants = {
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
+  const router = useRouter();
+  const auth = useAuth();
+  const { toast } = useToast();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -48,14 +52,40 @@ export default function AuthForm() {
     defaultValues: { name: '', email: '', password: '' },
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    console.log('Login data:', data);
-    // Handle login logic
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    if (!auth) return;
+    try {
+      await initiateEmailSignIn(auth, data.email, data.password);
+      toast({ title: 'Login Successful', description: "Welcome back!" });
+      
+      // Check if the user is the admin
+      if (data.email.toLowerCase() === 'h.penterprisehp5541@gmail.com') {
+          router.push('/admin');
+      } else {
+          router.push('/auth'); // Redirect regular users to their dashboard
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Login Failed',
+        description: error.message || 'An unknown error occurred.',
+        variant: 'destructive'
+      });
+    }
   };
 
-  const onSignupSubmit = (data: SignupFormValues) => {
-    console.log('Signup data:', data);
-    // Handle signup logic
+  const onSignupSubmit = async (data: SignupFormValues) => {
+    if (!auth) return;
+    try {
+      await initiateEmailSignUp(auth, data.email, data.password);
+      toast({ title: 'Signup Successful', description: "Your account has been created." });
+      router.push('/auth');
+    } catch (error: any) {
+      toast({
+        title: 'Signup Failed',
+        description: error.message || 'An unknown error occurred.',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -107,8 +137,8 @@ export default function AuthForm() {
                     />
                   </CardContent>
                   <CardFooter className="flex-col gap-4">
-                    <Button type="submit" className="w-full">
-                      Log In
+                    <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                      {loginForm.formState.isSubmitting ? 'Logging in...' : 'Log In'}
                     </Button>
                     <Button variant="link" size="sm" type="button" onClick={() => setIsLogin(false)}>
                       Don't have an account? Sign Up
@@ -131,7 +161,7 @@ export default function AuthForm() {
                 <form onSubmit={signupForm.handleSubmit(onSignupSubmit)}>
                   <CardHeader>
                     <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
-                    <CardDescription>Join us and start shopping for the best electronics.</CardDescription>
+                    <CardDescription>Join us to start your skincare journey.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <FormField
@@ -175,8 +205,8 @@ export default function AuthForm() {
                     />
                   </CardContent>
                   <CardFooter className="flex-col gap-4">
-                    <Button type="submit" className="w-full">
-                      Sign Up
+                    <Button type="submit" className="w-full" disabled={signupForm.formState.isSubmitting}>
+                       {signupForm.formState.isSubmitting ? 'Creating account...' : 'Sign Up'}
                     </Button>
                     <Button variant="link" size="sm" type="button" onClick={() => setIsLogin(true)}>
                       Already have an account? Log In
@@ -191,5 +221,3 @@ export default function AuthForm() {
     </Card>
   );
 }
-
-    

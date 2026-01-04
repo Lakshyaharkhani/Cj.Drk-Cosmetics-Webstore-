@@ -56,11 +56,7 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     };
 
     const handleAccountClick = () => {
-        if (user) {
-            router.push('/auth');
-        } else {
-            router.push('/auth');
-        }
+        router.push('/auth');
     };
 
     if (simplified) {
@@ -68,7 +64,7 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
             <header className="bg-white dark:bg-[#1a120d] border-b border-[#f4f2f0] dark:border-[#3a2d26] sticky top-0 z-50">
                 <div className="px-6 md:px-10 py-4 max-w-7xl mx-auto flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3">
-                        <span className="material-symbols-outlined text-primary text-3xl">spa</span>
+                        <Image src="https://firebasestorage.googleapis.com/v0/b/cjdrkcosmeticstore.appspot.com/o/Logo.png.png?alt=media" alt="Cj.Drk Logo" width={32} height={32} className="h-8 w-8 object-contain" />
                         <h1 className="text-xl font-bold tracking-tight">Cj.Drk</h1>
                     </Link>
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-500">
@@ -220,6 +216,9 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
                             <Link href="/products?category=serums" onClick={() => setIsMenuOpen(false)} className="text-lg font-semibold py-2 border-b border-gray-100 dark:border-gray-800 pl-4 text-gray-600 dark:text-gray-400">Serums</Link>
                             <Link href="/about" onClick={() => setIsMenuOpen(false)} className="text-lg font-semibold py-2 border-b border-gray-100 dark:border-gray-800">About Us</Link>
                             <button onClick={() => { handleAccountClick(); setIsMenuOpen(false); }} className="text-left text-lg font-semibold py-2">My Account</button>
+                             {user?.role === 'admin' && (
+                                <Link href="/admin" onClick={() => setIsMenuOpen(false)} className="text-lg font-semibold py-2 border-t border-gray-100 dark:border-gray-800 text-primary">Admin Dashboard</Link>
+                             )}
                         </nav>
                         
                         <div className="mt-auto pt-8 flex gap-4">
