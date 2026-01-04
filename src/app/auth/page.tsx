@@ -1,11 +1,13 @@
+
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const MOCK_USER = {
     name: 'Sarah Patel',
@@ -33,7 +35,8 @@ const recentOrders = [
     },
 ];
 
-export default function DashboardPage() {
+
+function DashboardPageContent() {
     const { user, isUserLoading } = useUser();
     const auth = useAuth();
     const router = useRouter();
@@ -46,17 +49,30 @@ export default function DashboardPage() {
     };
 
     if (isUserLoading) {
-        return <div className="p-20 text-center">Loading...</div>
+        return (
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                <div className="flex flex-col lg:flex-row gap-8">
+                    <aside className="w-full lg:w-64 flex-shrink-0">
+                        <Skeleton className="h-64 w-full" />
+                    </aside>
+                    <div className="flex-1 space-y-8">
+                         <Skeleton className="h-12 w-1/3" />
+                         <div className="grid grid-cols-3 gap-4">
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                         </div>
+                         <Skeleton className="h-64 w-full" />
+                    </div>
+                </div>
+            </main>
+        );
     }
 
     if (!user) {
         // This is a protected route, redirect to login if not authenticated
-        // Or show a message
-        // For now, redirecting to home as an example
-        if (typeof window !== 'undefined') {
-            router.push('/');
-        }
-        return <div className="p-20 text-center">Please sign in to view your dashboard.</div>;
+        router.push('/');
+        return <div className="p-20 text-center">Redirecting...</div>;
     }
 
     return (
@@ -141,4 +157,33 @@ export default function DashboardPage() {
             </div>
         </main>
     );
-};
+}
+
+
+export default function DashboardPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? <DashboardPageContent /> : (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="flex flex-col lg:flex-row gap-8">
+                <aside className="w-full lg:w-64 flex-shrink-0">
+                    <Skeleton className="h-64 w-full" />
+                </aside>
+                <div className="flex-1 space-y-8">
+                     <Skeleton className="h-12 w-1/3" />
+                     <div className="grid grid-cols-3 gap-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                     </div>
+                     <Skeleton className="h-64 w-full" />
+                </div>
+            </div>
+        </main>
+    );
+}
+

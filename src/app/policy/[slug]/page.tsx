@@ -5,6 +5,7 @@ import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, DocumentData, Timestamp } from 'firebase/firestore';
 import { notFound, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
+import { useState, useEffect } from 'react';
 
 interface Policy extends DocumentData {
     title: string;
@@ -12,7 +13,7 @@ interface Policy extends DocumentData {
     content: string;
 }
 
-export default function PolicyPage() {
+function PolicyPageContent() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
   const firestore = useFirestore();
@@ -48,4 +49,12 @@ export default function PolicyPage() {
   );
 }
 
-    
+export default function PolicyPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    return isClient ? <PolicyPageContent /> : <div className="container mx-auto px-4 py-12">Loading...</div>;
+}
