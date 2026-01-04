@@ -10,7 +10,7 @@ import {
   ShoppingCart,
   Users,
   LogOut,
-  Soap,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
               <Link href="/" className="flex items-center gap-2 group">
-                <Soap className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
+                <Sparkles className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
                 <h1 className="text-xl font-bold tracking-tight text-[#181311] dark:text-white">
                   NatureSoap{' '}
                   <span className="text-xs font-normal text-gray-500 ml-1 bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded-full">
