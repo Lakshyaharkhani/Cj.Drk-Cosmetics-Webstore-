@@ -4,19 +4,25 @@ export interface Product {
     name: string;
     price: number;
     originalPrice?: number;
-    category: string;
+    category: 'soaps' | 'perfumes' | 'serums' | 'gifting';
     description: string;
     image: string;
     thumbnails: string[];
     rating: number;
     reviews: number;
     isBestSeller?: boolean;
+    isNew?: boolean;
+    isSale?: boolean;
     ingredients?: string;
     scentNotes?: {
         top: string;
         middle: string;
         base: string;
     };
+}
+
+export interface CartItem extends Product {
+    quantity: number;
 }
 
 export interface User {
