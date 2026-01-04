@@ -1,0 +1,238 @@
+
+'use client';
+
+import { useState, useMemo } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import ProductCard from './ProductCard';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Slider } from './ui/slider';
+import { Checkbox } from './ui/checkbox';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination"
+import ProductGridSkeleton from './ProductGridSkeleton';
+import { DocumentData } from 'firebase/firestore';
+
+const PRODUCTS_PER_PAGE = 9;
+
+interface Product extends DocumentData {
+  id: string;
+  categorySlug: string;
+  stockStatus: string;
+  price: number;
+  rating: number;
+  reviewCount: number;
+}
+
+interface Category extends DocumentData {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+interface ProductGridProps {
+  allProducts: Product[];
+  allCategories: Category[];
+  isLoading: boolean;
+}
+
+export default function ProductGrid({ allProducts, allCategories, isLoading }: ProductGridProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [sortOption, setSortOption] = useState(searchParams.get('sort') || 'popularity');
+  const [priceRange, setPriceRange] = useState([0, 2000]);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  
+  const selectedCategory = searchParams.get('category') || 'all';
+  const currentPage = Number(searchParams.get('page')) || 1;
+
+  const filteredAndSortedProducts = useMemo(() => {
+    let products = allProducts;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      products = products.filter(p => p.categorySlug === selectedCategory);
+    }
+    
+    // Filter by stock
+    if (inStockOnly) {
+        products = products.filter(p => p.stockStatus === 'In Stock' || p.stockStatus === 'Low Stock');
+    }
+
+    // Filter by price
+    products = products.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    
+    // Sort
+    switch (sortOption) {
+      case 'price-asc':
+        products.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        products.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        products.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'popularity':
+      default:
+        products.sort((a, b) => b.reviewCount - a.reviewCount);
+        break;
+    }
+
+    return products;
+  }, [allProducts, selectedCategory, inStockOnly, priceRange, sortOption]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredAndSortedProducts.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
+  
+  const updateQueryParam = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  const handleCategoryChange = (slug: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug === 'all') {
+        params.delete('category');
+    } else {
+        params.set('category', slug);
+    }
+    params.delete('page'); // Reset to first page
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    updateQueryParam('page', page.toString());
+  }
+
+  const maxPrice = Math.max(...allProducts.map(p => p.price), 2000);
+
+  if (isLoading) {
+    return (
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
+            <aside className="lg:col-span-1">
+                <ProductGridSkeleton.Filters />
+            </aside>
+            <main className="lg:col-span-3">
+                <ProductGridSkeleton.Grid />
+            </main>
+        </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
+      {/* Filters */}
+      <aside className="lg:col-span-1">
+        <div className="space-y-8 sticky top-24">
+          <div>
+            <h3 className="font-headline text-lg mb-4">Category</h3>
+            <div className="space-y-2">
+                <Button variant={selectedCategory === 'all' ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => handleCategoryChange('all')}>All Products</Button>
+                {allCategories.map(cat => (
+                    <Button variant={selectedCategory === cat.slug ? 'secondary' : 'ghost'} className="w-full justify-start" key={cat.id} onClick={() => handleCategoryChange(cat.slug)}>{cat.name}</Button>
+                ))}
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-headline text-lg mb-4">Price Range</h3>
+            <Slider
+              min={0}
+              max={maxPrice}
+              step={100}
+              defaultValue={priceRange}
+              onValueChange={(value) => setPriceRange(value)}
+            />
+            <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+              <span>Rs {priceRange[0]}</span>
+              <span>Rs {priceRange[1]}</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center space-x-2">
+                <Checkbox id="in-stock" checked={inStockOnly} onCheckedChange={(checked) => setInStockOnly(!!checked)} />
+                <Label htmlFor="in-stock" className="font-headline text-lg">In Stock Only</Label>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Product Grid & Sort */}
+      <main className="lg:col-span-3">
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-muted-foreground">{filteredAndSortedProducts.length} products</p>
+          <Select value={sortOption} onValueChange={setSortOption}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="popularity">Popularity</SelectItem>
+              <SelectItem value="rating">Rating</SelectItem>
+              <SelectItem value="price-asc">Price: Low to High</SelectItem>
+              <SelectItem value="price-desc">Price: High to Low</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {paginatedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {paginatedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                ))}
+            </div>
+        ) : (
+            <div className="text-center py-20">
+                <h2 className="font-headline text-2xl">No Products Found</h2>
+                <p className="text-muted-foreground mt-2">Try adjusting your filters.</p>
+            </div>
+        )}
+
+        {totalPages > 1 && (
+            <div className="mt-12">
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} aria-disabled={currentPage === 1} />
+                        </PaginationItem>
+                        
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink href="#" onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }} isActive={currentPage === i + 1}>
+                                    {i + 1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }} aria-disabled={currentPage === totalPages} />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+    

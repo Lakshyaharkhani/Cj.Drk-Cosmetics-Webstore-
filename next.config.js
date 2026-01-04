@@ -23,11 +23,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'picsum.photos',
-        port: '',
-        pathname: '/**',
       },
     ],
   },
 };
 
 module.exports = nextConfig;
+
+    
