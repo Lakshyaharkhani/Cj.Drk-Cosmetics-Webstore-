@@ -41,6 +41,12 @@ function DashboardPageContent() {
     const auth = useAuth();
     const router = useRouter();
 
+    useEffect(() => {
+        if (!isUserLoading && !user) {
+            router.push('/');
+        }
+    }, [isUserLoading, user, router]);
+
     const handleLogout = async () => {
         if (auth) {
             await signOut(auth);
@@ -48,7 +54,7 @@ function DashboardPageContent() {
         }
     };
 
-    if (isUserLoading) {
+    if (isUserLoading || !user) {
         return (
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="flex flex-col lg:flex-row gap-8">
@@ -69,12 +75,6 @@ function DashboardPageContent() {
         );
     }
 
-    if (!user) {
-        // This is a protected route, redirect to login if not authenticated
-        router.push('/');
-        return <div className="p-20 text-center">Redirecting...</div>;
-    }
-
     return (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex flex-col lg:flex-row gap-8">
@@ -82,9 +82,9 @@ function DashboardPageContent() {
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border dark:border-gray-700">
                         <div className="flex flex-col items-center text-center mb-8">
                             <div className="size-20 rounded-full overflow-hidden mb-4 border-2 border-primary/20">
-                                <Image src={MOCK_USER.avatar} alt={MOCK_USER.name} width={80} height={80} className="w-full h-full object-cover" />
+                                <Image src={user.photoURL || MOCK_USER.avatar} alt={user.displayName || MOCK_USER.name} width={80} height={80} className="w-full h-full object-cover" />
                             </div>
-                            <h2 className="text-lg font-bold">{MOCK_USER.name}</h2>
+                            <h2 className="text-lg font-bold">{user.displayName || MOCK_USER.name}</h2>
                             <p className="text-gray-500 text-sm">{user.email}</p>
                             <p className="text-gray-500 text-xs mt-1">Member since {MOCK_USER.memberSince}</p>
                         </div>
@@ -108,7 +108,7 @@ function DashboardPageContent() {
 
                 <div className="flex-1 space-y-8">
                     <section className="space-y-6">
-                        <h2 className="text-3xl font-bold tracking-tight">Hello, {MOCK_USER.name.split(' ')[0]}</h2>
+                        <h2 className="text-3xl font-bold tracking-tight">Hello, {(user.displayName || MOCK_USER.name).split(' ')[0]}</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border dark:border-gray-700 shadow-sm">
                                 <span className="text-3xl font-bold text-primary">{MOCK_USER.orderCount}</span>
@@ -186,4 +186,3 @@ export default function DashboardPage() {
         </main>
     );
 }
-
