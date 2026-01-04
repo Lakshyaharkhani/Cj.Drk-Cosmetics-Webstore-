@@ -12,7 +12,7 @@ const footerSections = {
   ],
   about: [
     { href: "/about", label: "Our Story" },
-    { href: "#", label: "Ingredients" },
+    { href: "/ingredients", label: "Ingredients" },
     { href: "#", label: "Sustainability" },
     { href: "/blog", label: "Blog" },
     { href: "#", label: "Contact" },
@@ -66,7 +66,7 @@ export default function NewFooter() {
                             <h3 className="font-bold text-sm mb-4 capitalize">{key}</h3>
                             <ul className="space-y-3 text-sm text-gray-500">
                                 {footerSections[key].map(link => (
-                                    <li key={link.href}>
+                                    <li key={`${link.href}-${link.label}`}>
                                         <Link href={link.href} className="hover:text-primary transition-colors">
                                             {link.label}
                                         </Link>
@@ -84,5 +84,3 @@ export default function NewFooter() {
         </footer>
     );
 }
-
-    
