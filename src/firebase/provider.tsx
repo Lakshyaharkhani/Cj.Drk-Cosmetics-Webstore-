@@ -11,14 +11,6 @@ export interface AppUser extends FirebaseUser {
     role: 'admin' | 'customer';
 }
 
-interface FirebaseProviderProps {
-  children: ReactNode;
-  firebaseApp: FirebaseApp;
-  firestore: Firestore;
-  auth: Auth;
-}
-
-// Internal state for user authentication
 interface UserAuthState {
   user: AppUser | null;
   isUserLoading: boolean;
