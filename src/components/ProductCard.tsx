@@ -34,12 +34,15 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product as CartProduct);
   };
 
+  const imageUrl = images && images.length > 0 ? images[0] : 'https://picsum.photos/seed/placeholder/400/400';
+
+
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg">
       <Link href={`/product/${id}`} className="relative block">
         <div className="aspect-square w-full overflow-hidden">
           <Image
-            src={images[0]}
+            src={imageUrl}
             alt={name}
             data-ai-hint={`${category} product`}
             width={400}
