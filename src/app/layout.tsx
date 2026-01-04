@@ -1,12 +1,11 @@
-
 import './globals.css';
 import { Toaster } from '../components/ui/toaster';
 import { CartProvider } from '../context/CartContext';
 import { FirebaseClientProvider } from '../firebase';
-import NewHeader from '../components/NewHeader';
-import NewFooter from '../components/NewFooter';
 import { Metadata } from 'next';
 import React from 'react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: "Cj.Drk - Organic Skincare",
@@ -26,13 +25,13 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
       </head>
-      <body className="font-body antialiased bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+      <body className="font-body antialiased bg-background text-foreground">
         <FirebaseClientProvider>
           <CartProvider>
             <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
-              <NewHeader />
+              <Header />
               <main className="flex-grow">{children}</main>
-              <NewFooter />
+              <Footer />
             </div>
             <Toaster />
           </CartProvider>
