@@ -56,7 +56,11 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
     };
 
     const handleAccountClick = () => {
-        router.push('/auth');
+        if (user) {
+            router.push('/auth');
+        } else {
+            router.push('/login');
+        }
     };
 
     if (simplified) {
@@ -233,5 +237,3 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
 };
 
 export default Header;
-
-    
