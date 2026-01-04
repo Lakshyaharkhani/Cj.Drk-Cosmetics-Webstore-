@@ -24,7 +24,7 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -78,7 +78,12 @@ export default function AuthForm() {
     try {
       await initiateEmailSignUp(auth, data.email, data.password);
       toast({ title: 'Signup Successful', description: "Your account has been created." });
-      router.push('/auth');
+       // Check if the new user is the admin
+       if (data.email.toLowerCase() === 'h.penterprisehp5541@gmail.com') {
+        router.push('/admin');
+      } else {
+        router.push('/auth'); // Redirect regular users to their dashboard
+      }
     } catch (error: any) {
       toast({
         title: 'Signup Failed',
