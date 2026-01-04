@@ -1,21 +1,21 @@
 
 require('dotenv').config({ path: '.env.local' });
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, doc, writeBatch, Timestamp } = require('firebase/firestore');
+const admin = require('firebase-admin');
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+// Initialize Firebase Admin SDK
+try {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+  });
+} catch (error) {
+  if (error.code !== 'app/duplicate-app') {
+    console.error('Firebase admin initialization error', error);
+  }
+}
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = admin.firestore();
+const Timestamp = admin.firestore.Timestamp;
 
 const productsToSeed = [
     {
@@ -39,8 +39,8 @@ const productsToSeed = [
         tags: ['detox', 'acne', 'oily skin', 'handmade'],
         images: ['https://picsum.photos/seed/p1/600/600', 'https://picsum.photos/seed/p1-t1/600/600'],
         has_variants: false,
-        created_at: Timestamp.now().toMillis(),
-        updated_at: Timestamp.now().toMillis(),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
     },
     {
         id: 'lavender-shea-butter-soap',
@@ -63,8 +63,8 @@ const productsToSeed = [
         tags: ['moisturizing', 'calming', 'dry skin', 'handmade'],
         images: ['https://picsum.photos/seed/p2/600/600'],
         has_variants: false,
-        created_at: Timestamp.now().toMillis(),
-        updated_at: Timestamp.now().toMillis(),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
     },
     {
         id: 'sandalwood-bergamot-perfume',
@@ -87,8 +87,8 @@ const productsToSeed = [
         tags: ['woody', 'citrus', 'natural perfume', 'unisex'],
         images: ['https://picsum.photos/seed/p3/600/600'],
         has_variants: false,
-        created_at: Timestamp.now().toMillis(),
-        updated_at: Timestamp.now().toMillis(),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
     },
      {
         id: 'vitamin-c-glow-serum',
@@ -111,26 +111,22 @@ const productsToSeed = [
         tags: ['brightening', 'anti-aging', 'vitamin c', 'radiance'],
         images: ['https://picsum.photos/seed/p4/600/600'],
         has_variants: false,
-        created_at: Timestamp.now().toMillis(),
-        updated_at: Timestamp.now().toMillis(),
+        created_at: Timestamp.now(),
+        updated_at: Timestamp.now(),
     },
 ];
 
 
 async function seedDatabase() {
-  const productsCollection = collection(db, 'products');
-  
   if (productsToSeed.length === 0) {
     console.log('No products found to seed.');
     return;
   }
 
-  const batch = writeBatch(db);
+  const batch = db.batch();
 
   productsToSeed.forEach((product) => {
-    // We use the product's original ID as the document ID in Firestore
-    const docRef = doc(productsCollection, product.id);
-    // We remove the `id` field from the object, as it's now the document ID
+    const docRef = db.collection('products').doc(product.id);
     const { id, ...productData } = product;
     batch.set(docRef, productData);
   });
@@ -140,10 +136,6 @@ async function seedDatabase() {
     console.log(`Successfully seeded ${productsToSeed.length} products.`);
   } catch (error) {
     console.error('Error seeding database:', error);
-  } finally {
-    // Firebase doesn't have a simple "close connection" for the client SDK,
-    // so we'll just exit the process.
-    process.exit(0);
   }
 }
 
