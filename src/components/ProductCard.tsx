@@ -18,8 +18,7 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   
-  // Strengthened check: ensure product and its core properties, especially images, are present.
-  if (!product || !product.id || !product.images || product.images.length === 0) {
+  if (!product || !product.id) {
     return <ProductCardSkeleton />;
   }
 
@@ -30,7 +29,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product, 1);
   };
 
-  const imageUrl = images[0];
+  const imageUrl = images && images.length > 0 ? images[0] : 'https://placehold.co/400x400';
   const effectiveRating = rating || 0;
   const effectiveReviews = reviewCount || 0;
 

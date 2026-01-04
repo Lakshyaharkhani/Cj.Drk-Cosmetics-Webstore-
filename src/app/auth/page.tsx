@@ -8,6 +8,7 @@ import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UserCircle } from 'lucide-react';
 
 function DashboardPageContent() {
     const { user, isUserLoading } = useUser();
@@ -54,8 +55,8 @@ function DashboardPageContent() {
                 <aside className="w-full lg:w-64 flex-shrink-0">
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border dark:border-gray-700">
                         <div className="flex flex-col items-center text-center mb-8">
-                            <div className="size-20 rounded-full overflow-hidden mb-4 border-2 border-primary/20">
-                                <Image src={user.photoURL || `https://i.pravatar.cc/80?u=${user.uid}`} alt={user.displayName || 'User Avatar'} width={80} height={80} className="w-full h-full object-cover" />
+                            <div className="size-20 rounded-full overflow-hidden mb-4 border-2 border-primary/20 flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400">
+                                <UserCircle className="w-16 h-16" />
                             </div>
                             <h2 className="text-lg font-bold">{user.displayName || 'User'}</h2>
                             <p className="text-gray-500 text-sm">{user.email}</p>

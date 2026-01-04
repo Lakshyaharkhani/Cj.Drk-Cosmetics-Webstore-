@@ -1,6 +1,7 @@
+
 'use client';
 
-import { Bell, Home, Package, Search, Settings, ShoppingCart, Users, LogOut, Sparkles } from 'lucide-react';
+import { Bell, Home, Package, Search, Settings, ShoppingCart, Users, LogOut, Sparkles, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
@@ -68,6 +69,7 @@ function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
   return (
     <AdminAuthGuard>
       <div className="flex flex-col min-h-screen bg-[#f8f6f6] dark:bg-[#181311] text-[#181311] dark:text-gray-100 font-display transition-colors duration-200">
@@ -101,9 +103,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   </button>
                   <button className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full p-1 pr-3 transition-colors">
                     <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                      JD
+                      {user?.displayName?.charAt(0) || <UserCircle className="h-6 w-6"/>}
                     </div>
-                    <span className="text-sm font-medium hidden md:block">Jane Doe</span>
+                    <span className="text-sm font-medium hidden md:block">{user?.displayName || 'Admin'}</span>
                   </button>
                 </div>
               </div>
