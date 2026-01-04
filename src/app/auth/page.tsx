@@ -1,172 +1,144 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
-export default function Auth() { 
-    const [isLogin, setIsLogin] = useState(true);
-    const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
+
+const MOCK_USER = {
+    name: 'Sarah Patel',
+    avatar: 'https://picsum.photos/seed/u1/80/80',
+    memberSince: 2021,
+    orderCount: 12,
+    points: 1450,
+    memberStatus: 'Gold Tier',
+};
+
+const recentOrders = [
+    {
+        id: '#ORD-7392',
+        date: 'Oct 24, 2023',
+        status: 'Delivered',
+        total: '1240.00',
+        statusColor: 'bg-green-100 text-green-700',
+    },
+    {
+        id: '#ORD-7355',
+        date: 'Sep 12, 2023',
+        status: 'Shipped',
+        total: '455.50',
+        statusColor: 'bg-blue-100 text-blue-700',
+    },
+];
+
+export default function DashboardPage() {
+    const { user, isUserLoading } = useUser();
+    const auth = useAuth();
     const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setTimeout(() => {
-            setIsSubmitting(false);
-            router.push('/admin');
-        }, 1500);
+    const handleLogout = async () => {
+        if (auth) {
+            await signOut(auth);
+            router.push('/');
+        }
     };
 
+    if (isUserLoading) {
+        return <div className="p-20 text-center">Loading...</div>
+    }
+
+    if (!user) {
+        // This is a protected route, redirect to login if not authenticated
+        // Or show a message
+        // For now, redirecting to home as an example
+        if (typeof window !== 'undefined') {
+            router.push('/');
+        }
+        return <div className="p-20 text-center">Please sign in to view your dashboard.</div>;
+    }
+
     return (
-        <div className="min-h-screen bg-white dark:bg-[#181311] flex flex-col md:flex-row">
-            {isSubmitting && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
-            <p>{isLogin ? "Authenticating..." : "Creating Account..."}</p>
-          </div>
-        </div>
-      )}
-            
-            <div className="hidden md:flex md:w-1/2 relative bg-gray-100 dark:bg-gray-900 overflow-hidden">
-                <img 
-                    src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1974&auto=format&fit=crop" 
-                    alt="Organic Skincare" 
-                    className="absolute inset-0 w-full h-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-12">
-                    <Link href="/" className="flex items-center gap-2 mb-6 text-white group">
-                        <span className="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform">spa</span>
-                        <h1 className="text-2xl font-bold tracking-tight">Cj.Drk</h1>
-                    </Link>
-                    <h2 className="text-4xl font-extrabold text-white mb-4 tracking-tight">Pure beauty, <br/>refined by nature.</h2>
-                    <p className="text-gray-200 text-lg max-w-sm">Join our community of natural enthusiasts and unlock exclusive rewards with every purchase.</p>
-                </div>
-            </div>
-
-            <div className="flex-1 flex flex-col justify-center px-6 py-12 md:px-24">
-                <div className="md:hidden flex items-center gap-2 mb-12 self-start">
-                    <span className="material-symbols-outlined text-primary text-3xl">spa</span>
-                    <h1 className="text-2xl font-bold tracking-tight">Cj.Drk</h1>
-                </div>
-
-                <div className="max-w-md w-full mx-auto">
-                    <div className="mb-10 text-center md:text-left">
-                        <h2 className="text-3xl font-extrabold tracking-tight mb-3">
-                            {isLogin ? 'Welcome Back' : 'Join Cj.Drk'}
-                        </h2>
-                        <p className="text-gray-500 dark:text-gray-400">
-                            {isLogin 
-                                ? 'Enter your credentials to access your account.' 
-                                : 'Start your journey towards healthier, organic skin today.'}
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {!isLogin && (
-                            <div className="space-y-1">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Full Name</label>
-                                <div className="relative">
-                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">person</span>
-                                    <input 
-                                        required
-                                        type="text"
-                                        placeholder="Jane Doe"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl px-12 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                    />
-                                </div>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="flex flex-col lg:flex-row gap-8">
+                <aside className="w-full lg:w-64 flex-shrink-0">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border dark:border-gray-700">
+                        <div className="flex flex-col items-center text-center mb-8">
+                            <div className="size-20 rounded-full overflow-hidden mb-4 border-2 border-primary/20">
+                                <Image src={MOCK_USER.avatar} alt={MOCK_USER.name} width={80} height={80} className="w-full h-full object-cover" />
                             </div>
-                        )}
+                            <h2 className="text-lg font-bold">{MOCK_USER.name}</h2>
+                            <p className="text-gray-500 text-sm">{user.email}</p>
+                            <p className="text-gray-500 text-xs mt-1">Member since {MOCK_USER.memberSince}</p>
+                        </div>
+                        <nav className="flex flex-col gap-1">
+                            <Link href="/auth" className="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-bold">
+                                <span className="material-symbols-outlined text-[20px] fill-current">dashboard</span> Dashboard
+                            </Link>
+                            <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <span className="material-symbols-outlined text-[20px]">shopping_bag</span> Orders
+                            </Link>
+                            <Link href="#" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <span className="material-symbols-outlined text-[20px]">location_on</span> Addresses
+                            </Link>
+                            <hr className="my-2 dark:border-gray-700" />
+                            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <span className="material-symbols-outlined text-[20px]">logout</span> Logout
+                            </button>
+                        </nav>
+                    </div>
+                </aside>
 
-                        <div className="space-y-1">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Email Address</label>
-                            <div className="relative">
-                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">mail</span>
-                                <input 
-                                    required
-                                    type="email"
-                                    placeholder="name@email.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl px-12 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                />
+                <div className="flex-1 space-y-8">
+                    <section className="space-y-6">
+                        <h2 className="text-3xl font-bold tracking-tight">Hello, {MOCK_USER.name.split(' ')[0]}</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border dark:border-gray-700 shadow-sm">
+                                <span className="text-3xl font-bold text-primary">{MOCK_USER.orderCount}</span>
+                                <p className="text-sm text-gray-500 font-medium mt-1">Total Orders</p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border dark:border-gray-700 shadow-sm">
+                                <span className="text-3xl font-bold text-primary">{MOCK_USER.points}</span>
+                                <p className="text-sm text-gray-500 font-medium mt-1">Loyalty Points</p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border dark:border-gray-700 shadow-sm col-span-2 md:col-span-1">
+                                <span className="text-3xl font-bold text-green-500">{MOCK_USER.memberStatus}</span>
+                                <p className="text-sm text-gray-500 font-medium mt-1">Member Status</p>
                             </div>
                         </div>
+                    </section>
 
-                        <div className="space-y-1">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold uppercase tracking-wider text-gray-400">Password</label>
-                                {isLogin && <button type="button" className="text-xs font-bold text-primary hover:underline">Forgot Password?</button>}
-                            </div>
-                            <div className="relative">
-                                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">lock</span>
-                                <input 
-                                    required
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl px-12 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
-                                />
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                >
-                                    {showPassword ? 'visibility' : 'visibility_off'}
-                                </button>
-                            </div>
+                    <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border dark:border-gray-700 overflow-hidden">
+                        <div className="p-6 border-b dark:border-gray-700 flex justify-between items-center">
+                            <h3 className="text-lg font-bold">Recent Orders</h3>
+                            <button className="text-primary text-sm font-bold hover:underline">View All</button>
                         </div>
-
-                        {isLogin && (
-                            <label className="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" className="rounded text-primary focus:ring-primary h-5 w-5 border-gray-200" />
-                                <span className="text-sm text-gray-500 group-hover:text-gray-700">Remember me for 30 days</span>
-                            </label>
-                        )}
-
-                        <button 
-                            disabled={isSubmitting}
-                            type="submit"
-                            className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 group transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLogin ? 'Sign In' : 'Create Account'}
-                            <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
-                        </button>
-                    </form>
-
-                    <div className="relative my-10">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100 dark:border-gray-800"></div></div>
-                        <div className="relative flex justify-center text-xs uppercase"><span className="bg-white dark:bg-[#181311] px-4 text-gray-400 font-bold tracking-widest">Or continue with</span></div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <button className="flex items-center justify-center gap-2 py-3 border border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-semibold text-sm">
-                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="size-5" />
-                            Google
-                        </button>
-                        <button className="flex items-center justify-center gap-2 py-3 border border-gray-100 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-semibold text-sm">
-                            <img src="https://www.svgrepo.com/show/511330/apple-173.svg" alt="Apple" className="size-5 dark:invert" />
-                            Apple
-                        </button>
-                    </div>
-
-                    <p className="mt-10 text-center text-gray-500 text-sm">
-                        {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-                        <button 
-                            onClick={() => setIsLogin(!isLogin)}
-                            className="text-primary font-bold hover:underline"
-                        >
-                            {isLogin ? 'Sign up for free' : 'Login here'}
-                        </button>
-                    </p>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="bg-gray-50 dark:bg-gray-900/50 text-xs uppercase tracking-wider text-gray-500">
+                                    <tr>
+                                        <th className="px-6 py-4">Order ID</th>
+                                        <th className="px-6 py-4">Date</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y dark:divide-gray-700 text-sm">
+                                    {recentOrders.map(order => (
+                                        <tr key={order.id}>
+                                            <td className="px-6 py-4 font-medium">{order.id}</td>
+                                            <td className="px-6 py-4">{order.date}</td>
+                                            <td className="px-6 py-4"><span className={`px-2 py-0.5 rounded-full text-xs ${order.statusColor}`}>{order.status}</span></td>
+                                            <td className="px-6 py-4 font-bold">Rs {order.total}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
             </div>
-        </div>
+        </main>
     );
 };
