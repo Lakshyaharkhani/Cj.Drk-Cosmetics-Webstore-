@@ -8,6 +8,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
 import { collection, DocumentData, query, limit } from 'firebase/firestore';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/lib/product-types';
+import ProductCardSkeleton from '@/components/ProductCardSkeleton';
 
 const valueProps = [
   { icon: 'water_drop', title: 'Cold Pressed', description: 'Retaining all natural nutrients' },
@@ -45,7 +46,7 @@ export default function Home() {
   
   const firestore = useFirestore();
   const productsRef = useMemoFirebase(() => query(collection(firestore, 'products'), limit(4)), [firestore]);
-  const { data: products } = useCollection<Product>(productsRef);
+  const { data: products, isLoading } = useCollection<Product>(productsRef);
 
   return (
     <>
@@ -131,9 +132,13 @@ export default function Home() {
             <p className="text-gray-500">Our community's most loved products, crafted for daily rituals.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products && products.map((product) => (
-              <ProductCard key={product.id} product={product as Product} />
-            ))}
+            {isLoading ? (
+              [...Array(4)].map((_, i) => <ProductCardSkeleton key={i} />)
+            ) : (
+              products?.map((product) => (
+                <ProductCard key={product.id} product={product as Product} />
+              ))
+            )}
           </div>
         </div>
       </section>

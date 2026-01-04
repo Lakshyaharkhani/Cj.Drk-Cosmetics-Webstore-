@@ -8,13 +8,19 @@ import { Badge } from './ui/badge';
 import React from 'react';
 import { Product } from '@/lib/product-types';
 import { Star } from 'lucide-react';
+import ProductCardSkeleton from './ProductCardSkeleton';
 
 interface ProductCardProps {
-  product: Product;
+  product?: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  
+  if (!product || !product.id) {
+    return <ProductCardSkeleton />;
+  }
+
   const { id, name, price, mrp, images, category_id, tags, rating, reviewCount } = product;
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
