@@ -1,27 +1,30 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { notFound, useParams } from 'next/navigation';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../../components/ui/accordion';
 import { Star, Minus, Plus } from 'lucide-react';
 import ProductLoadingPage from './loading';
 import { cn } from '@/lib/utils';
-import { MOCK_PRODUCTS } from '@/lib/constants';
 import { Product } from '@/lib/types';
 import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, DocumentData } from 'firebase/firestore';
 
 function ProductDetails({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   
   const handleAddToCart = () => {
-    const cartProduct = { ...product, images: [product.image], brand: 'Cj.Drk' };
-    addToCart(cartProduct, quantity);
+    addToCart(product, quantity);
   };
+
+  const rating = product.rating || 0;
+  const reviews = product.reviews || 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -31,10 +34,10 @@ function ProductDetails({ product }: { product: Product }) {
             <div className="flex items-center gap-4">
                 <div className="flex text-primary">
                     {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                        <Star key={i} className={`h-5 w-5 ${i < Math.floor(rating) ? 'fill-current' : ''}`} />
                     ))}
                 </div>
-                <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{product.reviews} verified reviews</span>
+                <span className="text-sm font-bold text-gray-400 underline decoration-gray-300 underline-offset-4">{reviews} verified reviews</span>
             </div>
         </div>
 
@@ -78,24 +81,29 @@ function ProductDetails({ product }: { product: Product }) {
 
 export default function ProductPage() {
   const params = useParams();
+  const firestore = useFirestore();
   const productId = Array.isArray(params.id) ? params.id[0] : params.id;
   
-  const product = MOCK_PRODUCTS.find(p => p.id === productId);
+  const productRef = useMemoFirebase(() => productId ? doc(firestore, 'products', productId) : null, [firestore, productId]);
+  const { data: product, isLoading } = useDoc<Product>(productRef);
   
   const [selectedImage, setSelectedImage] = useState(0);
 
+  useEffect(() => {
+    // Reset selected image when product changes
+    setSelectedImage(0);
+  }, [productId]);
+
+
+  if (isLoading) {
+    return <ProductLoadingPage />;
+  }
+
   if (!product) {
-    // In a real app, you might fetch data here or show a loading state
-    // For this mock setup, we'll assume the product is always found if the page is visited
-    // If not, we can show a not found page.
-    const [isLoading, setIsLoading] = useState(true);
-    if(isLoading){
-        return <ProductLoadingPage />;
-    }
     notFound();
   }
   
-  const allImages = [product.image, ...product.thumbnails];
+  const allImages = [product.image, ...product.thumbnails].filter(Boolean);
 
   const handleThumbnailClick = (index: number) => {
     setSelectedImage(index);
@@ -108,13 +116,14 @@ export default function ProductPage() {
         <div>
           <div className="aspect-square w-full overflow-hidden rounded-lg border">
             <Image
-              src={allImages[selectedImage]}
+              src={allImages[selectedImage] || 'https://placehold.co/600x600'}
               alt={product.name}
               data-ai-hint={`${product.category} product`}
               width={600}
               height={600}
               className="h-full w-full object-cover"
               key={selectedImage} // Force re-render on image change for transition
+              priority
             />
           </div>
           <div className="mt-4 grid grid-cols-4 gap-4">
@@ -182,9 +191,9 @@ export default function ProductPage() {
         <div className="rounded-lg border bg-card p-6">
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center text-4xl font-bold">
-                    {product.rating.toFixed(1)} <Star className="ml-2 h-8 w-8 fill-yellow-400 text-yellow-400" />
+                    {(product.rating || 0).toFixed(1)} <Star className="ml-2 h-8 w-8 fill-yellow-400 text-yellow-400" />
                 </div>
-                <p className="text-muted-foreground">Based on {product.reviews} reviews</p>
+                <p className="text-muted-foreground">Based on {product.reviews || 0} reviews</p>
             </div>
             {/* Mock Reviews - In a real app, these would come from Firestore */}
             <div className="space-y-6">
@@ -212,3 +221,5 @@ export default function ProductPage() {
     </div>
   );
 }
+
+    

@@ -3,15 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useToast } from '../hooks/use-toast';
-import { DocumentData } from 'firebase/firestore';
-
-export interface Product extends DocumentData {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-  brand: string;
-}
+import { Product } from '@/lib/types';
 
 export interface CartItem extends Product {
   quantity: number;
@@ -93,3 +85,5 @@ export const useCart = () => {
   }
   return context;
 };
+
+    

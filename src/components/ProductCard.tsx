@@ -20,11 +20,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const cartProduct = { ...product, images: [product.image], brand: 'Cj.Drk' };
-    addToCart(cartProduct, 1);
+    addToCart(product, 1);
   };
 
   const imageUrl = image && typeof image === 'string' ? image : 'https://picsum.photos/seed/placeholder/400/400';
+  const effectiveRating = rating || 0;
+  const effectiveReviews = reviews || 0;
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg h-full">
@@ -53,9 +54,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-            {rating}
+            {effectiveRating}
           </span>
-          <span>({reviews} reviews)</span>
+          <span>({effectiveReviews} reviews)</span>
         </div>
         <div className="mt-4">
           <p className="text-xl font-bold">
@@ -70,3 +71,5 @@ export default function ProductCard({ product }: ProductCardProps) {
     </div>
   );
 }
+
+    

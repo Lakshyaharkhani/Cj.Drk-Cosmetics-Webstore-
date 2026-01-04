@@ -233,3 +233,5 @@ const Header: React.FC<{ simplified?: boolean }> = ({ simplified }) => {
 };
 
 export default Header;
+
+    

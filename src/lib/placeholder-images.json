@@ -30,21 +30,21 @@
   "categories": [
     {
       "name": "Artisan Soaps",
-      "slug": "artisan-soaps",
+      "slug": "soaps",
       "src": "https://picsum.photos/seed/c1/600/800",
       "alt": "Stack of handmade artisan soaps with rustic textures",
       "hint": "artisan soap"
     },
     {
       "name": "Radiant Serums",
-      "slug": "radiant-serums",
+      "slug": "serums",
       "src": "https://picsum.photos/seed/c2/600/800",
       "alt": "Minimalist bottle of radiant serum on a beige background",
       "hint": "serum bottle"
     },
     {
       "name": "Solid Perfumes",
-      "slug": "solid-perfumes",
+      "slug": "perfumes",
       "src": "https://picsum.photos/seed/c3/600/800",
       "alt": "Solid perfume tins displayed on a wooden surface",
       "hint": "perfume tin"

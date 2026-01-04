@@ -11,6 +11,8 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { MOCK_PRODUCTS } from '@/lib/constants';
 import { Product } from '@/lib/types';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, DocumentData, query, where, Query } from 'firebase/firestore';
 
 const allCategories = [
     { id: '1', slug: 'soaps', name: 'Soaps' },
@@ -91,26 +93,26 @@ const FiltersContent = ({
 
 export default function ProductsPage() {
   const searchParams = useSearchParams();
+  const firestore = useFirestore();
 
-  const query = searchParams.get('q')?.toLowerCase() || '';
+  const queryParam = searchParams.get('q')?.toLowerCase() || '';
   const initialCategory = searchParams.get('category');
   
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategory ? [initialCategory] : []);
   
-  const absoluteMaxPrice = useMemo(() => Math.max(...MOCK_PRODUCTS.map(p => p.price), 50), []);
+  const [absoluteMaxPrice, setAbsoluteMaxPrice] = useState(2000);
   const [maxPrice, setMaxPrice] = useState<number>(absoluteMaxPrice);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-      // Simulate loading
-      const timer = setTimeout(() => {
-          setIsLoading(false);
-      }, 500);
-      return () => clearTimeout(timer);
-  }, []);
-
+  const productsQuery = useMemoFirebase(() => {
+    let q: Query<DocumentData> = collection(firestore, 'products');
+    if (selectedCategories.length > 0) {
+      q = query(q, where('category_id', 'in', selectedCategories));
+    }
+    return q;
+  }, [firestore, selectedCategories]);
+  
+  const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
   useEffect(() => {
       if (initialCategory) {
@@ -118,16 +120,25 @@ export default function ProductsPage() {
       }
   }, [initialCategory]);
 
+  useEffect(() => {
+    if (products && products.length > 0) {
+        const maxProductPrice = Math.max(...products.map(p => p.price), 0);
+        setAbsoluteMaxPrice(maxProductPrice);
+        setMaxPrice(maxProductPrice);
+    }
+  }, [products]);
+
+
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter(p => {
-        const matchesQuery = query ? p.name.toLowerCase().includes(query) || 
-                           p.description.toLowerCase().includes(query) ||
-                           p.category.toLowerCase().includes(query) : true;
-        const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
+    if (!products) return [];
+    return products.filter(p => {
+        const matchesQuery = queryParam ? p.name.toLowerCase().includes(queryParam) || 
+                           p.description.toLowerCase().includes(queryParam) ||
+                           p.category_id.toLowerCase().includes(queryParam) : true;
         const matchesPrice = p.price <= maxPrice;
-        return matchesQuery && matchesCategory && matchesPrice;
+        return matchesQuery && matchesPrice;
     });
-  }, [query, selectedCategories, maxPrice]);
+  }, [products, queryParam, maxPrice]);
 
   const toggleCategory = (catSlug: string) => {
     if (catSlug === '__RESET__') {
@@ -141,13 +152,13 @@ export default function ProductsPage() {
   };
   
   const currentCategoryName = useMemo(() => {
-      if(query) return `Results for "${query}"`;
+      if(queryParam) return `Results for "${queryParam}"`;
       if (selectedCategories.length === 1) {
           return allCategories?.find(c => c.slug === selectedCategories[0])?.name || 'All Essentials';
       }
       if (selectedCategories.length > 1) return 'Multiple Categories';
       return 'All Essentials';
-  }, [query, selectedCategories]);
+  }, [queryParam, selectedCategories]);
 
   return (
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -198,7 +209,7 @@ export default function ProductsPage() {
                                   className="animate-in fade-in zoom-in-95 duration-500 fill-mode-both"
                                   style={{ animationDelay: `${idx * 50}ms` }}
                               >
-                                  <ProductCard product={p} />
+                                  <ProductCard product={p as Product} />
                               </div>
                           ))}
                       </div>
@@ -227,3 +238,5 @@ export default function ProductsPage() {
       </main>
   );
 };
+
+    

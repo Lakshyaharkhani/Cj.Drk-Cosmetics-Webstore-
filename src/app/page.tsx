@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import placeholderImages from '../lib/placeholder-images.json';
 import { useCollection, useFirestore, useMemoFirebase } from '../firebase';
-import { collection, DocumentData } from 'firebase/firestore';
+import { collection, DocumentData, query, limit } from 'firebase/firestore';
 import ProductCard from '@/components/ProductCard';
+import { Product } from '@/lib/types';
 
 const valueProps = [
   { icon: 'water_drop', title: 'Cold Pressed', description: 'Retaining all natural nutrients' },
@@ -16,15 +17,11 @@ const valueProps = [
   { icon: 'recycling', title: 'Plastic-Free', description: 'Sustainable packaging' }
 ];
 
-interface Product extends DocumentData {
-  id: string;
-}
-
 export default function Home() {
   const { hero, categories } = placeholderImages;
   
   const firestore = useFirestore();
-  const productsRef = useMemoFirebase(() => collection(firestore, 'products'), [firestore]);
+  const productsRef = useMemoFirebase(() => query(collection(firestore, 'products'), limit(4)), [firestore]);
   const { data: products } = useCollection<Product>(productsRef);
 
   return (
@@ -111,8 +108,8 @@ export default function Home() {
             <p className="text-gray-500">Our community's most loved products, crafted for daily rituals.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products && products.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products && products.map((product) => (
+              <ProductCard key={product.id} product={product as Product} />
             ))}
           </div>
         </div>
@@ -120,3 +117,5 @@ export default function Home() {
     </>
   );
 }
+
+    
