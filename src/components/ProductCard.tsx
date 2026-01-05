@@ -28,10 +28,6 @@ export default function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     addToCart(product, 1);
   };
-
-  const imageUrl = (Array.isArray(images) && images.length > 0 && typeof images[0] === 'string' && images[0]) 
-    ? images[0] 
-    : 'https://placehold.co/400x400';
   
   const effectiveRating = rating || 0;
   const effectiveReviews = reviewCount || 0;
@@ -41,7 +37,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/product/${id}`} className="relative block">
         <div className="aspect-square w-full overflow-hidden">
           <Image
-            src={imageUrl}
+            src={(Array.isArray(images) && images.length > 0 && typeof images[0] === 'string' && images[0]) ? images[0] : 'https://placehold.co/400x400'}
             alt={name}
             data-ai-hint={`${category_id} product`}
             width={400}
