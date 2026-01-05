@@ -29,7 +29,10 @@ export default function ProductCard({ product }: ProductCardProps) {
     addToCart(product, 1);
   };
 
-  const imageUrl = (images && images.length > 0 && typeof images[0] === 'string' && images[0]) ? images[0] : 'https://placehold.co/400x400';
+  const imageUrl = (Array.isArray(images) && images.length > 0 && typeof images[0] === 'string' && images[0]) 
+    ? images[0] 
+    : 'https://placehold.co/400x400';
+  
   const effectiveRating = rating || 0;
   const effectiveReviews = reviewCount || 0;
 

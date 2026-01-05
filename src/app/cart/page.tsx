@@ -28,42 +28,48 @@ export default function CartPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {cartItems.map(item => (
-                <div key={item.id} className="flex gap-6 py-8">
-                  <div className="shrink-0 w-24 h-24 sm:w-32 rounded-xl overflow-hidden bg-gray-100">
-                    <Image 
-                      src={item.images[0]} 
-                      alt={item.name} 
-                      width={128}
-                      height={128}
-                      className="h-full w-full object-cover" 
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-bold leading-tight">{item.name}</h3>
-                        <p className="text-sm text-gray-500 capitalize">{item.category_id}</p>
-                      </div>
-                      <p className="text-lg font-semibold">Rs {(item.price * item.quantity).toFixed(2)}</p>
+              {cartItems.map(item => {
+                const imageUrl = (Array.isArray(item.images) && item.images.length > 0 && typeof item.images[0] === 'string' && item.images[0]) 
+                  ? item.images[0] 
+                  : 'https://placehold.co/128x128';
+
+                return (
+                  <div key={item.id} className="flex gap-6 py-8">
+                    <div className="shrink-0 w-24 h-24 sm:w-32 rounded-xl overflow-hidden bg-gray-100">
+                      <Image 
+                        src={imageUrl} 
+                        alt={item.name} 
+                        width={128}
+                        height={128}
+                        className="h-full w-full object-cover" 
+                      />
                     </div>
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="size-8 flex items-center justify-center hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-[16px]">remove</span>
-                        </button>
-                        <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="size-8 flex items-center justify-center hover:text-primary transition-colors">
-                          <span className="material-symbols-outlined text-[16px]">add</span>
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-bold leading-tight">{item.name}</h3>
+                          <p className="text-sm text-gray-500 capitalize">{item.category_id}</p>
+                        </div>
+                        <p className="text-lg font-semibold">Rs {(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="size-8 flex items-center justify-center hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined text-[16px]">remove</span>
+                          </button>
+                          <span className="w-10 text-center font-semibold text-sm">{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="size-8 flex items-center justify-center hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined text-[16px]">add</span>
+                          </button>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="text-sm text-gray-400 hover:text-red-500 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[18px]">delete</span> Remove
                         </button>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} className="text-sm text-gray-400 hover:text-red-500 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[18px]">delete</span> Remove
-                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -107,7 +108,9 @@ export default function ProductPage() {
   }
   
   const allImages = product.images || [];
-  const mainImageUrl = (allImages && allImages.length > 0 && typeof allImages[selectedImage] === 'string' && allImages[selectedImage]) ? allImages[selectedImage] : 'https://placehold.co/600x600';
+  const mainImageUrl = (allImages && allImages.length > selectedImage && typeof allImages[selectedImage] === 'string' && allImages[selectedImage]) 
+    ? allImages[selectedImage] 
+    : 'https://placehold.co/600x600';
 
 
   const handleThumbnailClick = (index: number) => {
@@ -142,7 +145,7 @@ export default function ProductPage() {
                 onClick={() => handleThumbnailClick(index)}
               >
                 <Image
-                  src={img || 'https://placehold.co/150x150'}
+                  src={(typeof img === 'string' && img) ? img : 'https://placehold.co/150x150'}
                   alt={`${product.name} view ${index + 1}`}
                   data-ai-hint="product detail"
                   width={150}
