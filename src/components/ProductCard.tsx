@@ -31,13 +31,18 @@ export default function ProductCard({ product }: ProductCardProps) {
   
   const effectiveRating = rating || 0;
   const effectiveReviews = reviewCount || 0;
+  
+  // Final robust check: Ensure the image source is a valid absolute URL.
+  const imageUrl = (Array.isArray(images) && images.length > 0 && typeof images[0] === 'string' && images[0].startsWith('http')) 
+    ? images[0] 
+    : 'https://placehold.co/400x400';
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all hover:shadow-lg h-full">
       <Link href={`/product/${id}`} className="relative block">
         <div className="aspect-square w-full overflow-hidden">
           <Image
-            src={(Array.isArray(images) && images.length > 0 && images[0]) ? images[0] : 'https://placehold.co/400x400'}
+            src={imageUrl}
             alt={name}
             data-ai-hint={`${category_id} product`}
             width={400}
