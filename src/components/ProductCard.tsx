@@ -37,7 +37,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link href={`/product/${id}`} className="relative block">
         <div className="aspect-square w-full overflow-hidden">
           <Image
-            src={(Array.isArray(images) && images.length > 0 && typeof images[0] === 'string' && images[0]) ? images[0] : 'https://placehold.co/400x400'}
+            src={(Array.isArray(images) && images.length > 0 && images[0]) ? images[0] : 'https://placehold.co/400x400'}
             alt={name}
             data-ai-hint={`${category_id} product`}
             width={400}
