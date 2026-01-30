@@ -2,20 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface ShopProps {
   products: Product[];
-}
-
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 const Shop: React.FC<ShopProps> = ({ products }) => {

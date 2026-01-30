@@ -5,6 +5,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { ShoppingBag, Search, Menu, Home, Compass, ShoppingCart, Mail, X, ArrowRight, User as UserIcon, LogOut } from 'lucide-react';
 import { useFirebase } from '../firebase/FirebaseProvider';
 import { Product } from '../types';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface NavbarProps {
   toggleCart: () => void;
@@ -13,19 +14,7 @@ interface NavbarProps {
   isAdmin: boolean;
 }
 
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
-}
-
-
-const Navbar: React.FC<NavbarProps> = ({ toggleCart, user, isAdmin }) => {
+const Navbar: React.FC<NavbarProps> = ({ toggleCart, cartCount, user, isAdmin }) => {
   const { auth, firestore } = useFirebase();
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,7 +24,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleCart, user, isAdmin }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
     if (!firestore) return;
@@ -45,26 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleCart, user, isAdmin }) => {
     });
     return () => unsub();
   }, [firestore]);
-
-  useEffect(() => {
-    if (!firestore || !user) {
-      setCartCount(0);
-      return;
-    }
-    const cartRef = doc(firestore, 'carts', user.uid);
-    const unsub = onSnapshot(cartRef, (doc) => {
-        if (doc.exists()) {
-            const items = doc.data().items || [];
-            const count = items.reduce((acc: number, item: { quantity: number }) => acc + item.quantity, 0);
-            setCartCount(count);
-        } else {
-            setCartCount(0);
-        }
-    });
-
-    return () => unsub();
-  }, [firestore, user]);
-
 
   // Close search and clear query on route change
   useEffect(() => {

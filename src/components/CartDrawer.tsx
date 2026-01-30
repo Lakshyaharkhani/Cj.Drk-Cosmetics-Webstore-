@@ -2,110 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { doc, onSnapshot, getDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { useFirebase } from '../firebase/FirebaseProvider';
-import { CartItem, Product } from '../types';
+import { CartItem } from '../types';
 
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  cartItems: CartItem[];
+  updateQuantity: (productId: string, newQuantity: number) => void;
+  removeFromCart: (productId: string) => void;
 }
 
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
-}
-
-const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
-  const { firestore, user } = useFirebase();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, cartItems, updateQuantity, removeFromCart }) => {
+  const { user } = useFirebase();
   const [total, setTotal] = useState(0);
-
-  useEffect(() => {
-    if (!firestore || !user) {
-      setCartItems([]);
-      return;
-    }
-
-    const cartRef = doc(firestore, 'carts', user.uid);
-    const unsubscribe = onSnapshot(cartRef, async (cartDoc) => {
-      if (cartDoc.exists()) {
-        const cartData = cartDoc.data();
-        const itemPromises = (cartData.items || []).map(async (item: {productId: string, quantity: number}) => {
-          const productDoc = await getDoc(doc(firestore, 'products', item.productId));
-          if (productDoc.exists()) {
-            const productData = productDoc.data() as Product;
-            const imageUrl = (Array.isArray(productData.images) && productData.images.length > 0 && isValidHttpUrl(productData.images[0])) ? productData.images[0] : 'https://placehold.co/400x400';
-            return {
-              id: productDoc.id,
-              name: productData.name,
-              price: productData.price,
-              image: imageUrl,
-              quantity: item.quantity,
-            };
-          }
-          return null;
-        });
-
-        const resolvedItems = (await Promise.all(itemPromises)).filter(Boolean) as CartItem[];
-        setCartItems(resolvedItems);
-      } else {
-        setCartItems([]);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [firestore, user]);
 
   useEffect(() => {
     const newTotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     setTotal(newTotal);
   }, [cartItems]);
-  
-  const updateQuantity = async (productId: string, delta: number) => {
-      if (!firestore || !user) return;
-      
-      const cartRef = doc(firestore, 'carts', user.uid);
-      const cartDoc = await getDoc(cartRef);
-      
-      if (cartDoc.exists()) {
-          const items = cartDoc.data().items || [];
-          const itemIndex = items.findIndex((i: { productId: string }) => i.productId === productId);
-          
-          if (itemIndex > -1) {
-              const newItems = [...items];
-              const newQuantity = newItems[itemIndex].quantity + delta;
-              
-              if (newQuantity < 1) {
-                  // If quantity is less than 1, remove the item
-                  newItems.splice(itemIndex, 1);
-              } else {
-                  newItems[itemIndex].quantity = newQuantity;
-              }
-              
-              await updateDoc(cartRef, { items: newItems, updatedAt: new Date() });
-          }
-      }
-  };
-
-  const onRemove = async (productId: string) => {
-    if (!firestore || !user) return;
-    const cartRef = doc(firestore, 'carts', user.uid);
-    const cartDoc = await getDoc(cartRef);
-
-    if (cartDoc.exists()) {
-        const items = cartDoc.data().items || [];
-        const updatedItems = items.filter((item: { productId: string }) => item.productId !== productId);
-        await updateDoc(cartRef, { items: updatedItems, updatedAt: new Date() });
-    }
-  };
-
 
   return (
     <AnimatePresence>
@@ -155,22 +70,21 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3 bg-white/50 rounded-full px-2 py-1 border border-brand-dark/5">
                           <button 
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors disabled:opacity-50"
-                            disabled={item.quantity <= 1}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
                           >
                             <Minus size={12} />
                           </button>
                           <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
                           <button 
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
                           >
                             <Plus size={12} />
                           </button>
                         </div>
                         <button 
-                          onClick={() => onRemove(item.id)} 
+                          onClick={() => removeFromCart(item.id)} 
                           className="text-brand-accent text-xs hover:underline flex items-center gap-1"
                         >
                           <Trash2 size={12} /> Remove

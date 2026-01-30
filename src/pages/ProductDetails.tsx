@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Plus, Minus, Star, ShieldCheck, Truck } from 'lucide-react';
+import { Check, Plus, Minus, Star, ShieldCheck } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { useFirebase } from '../firebase/FirebaseProvider';
 import { Product } from '../types';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface ProductDetailsProps {
   addToCart: (product: Product, quantity: number) => void;
-}
-
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ addToCart }) => {
@@ -30,9 +20,11 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ addToCart }) => {
 
   const [openSection, setOpenSection] = useState<string | null>('ingredients');
   const [isAdded, setIsAdded] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     if (!firestore || !id) return;
+    setLoading(true);
     const getProduct = async () => {
       const docRef = doc(firestore, 'products', id);
       const docSnap = await getDoc(docRef);
@@ -44,19 +36,23 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ addToCart }) => {
     getProduct();
   }, [firestore, id]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading product...</div>;
-  if (!product) return <div className="h-screen flex items-center justify-center">Product not found</div>;
-
   const handleAddToCart = () => {
-    addToCart(product, 1);
+    if (!product) return;
+    addToCart(product, quantity);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+    setTimeout(() => {
+      setIsAdded(false);
+      setQuantity(1);
+    }, 2000);
   };
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
   
+  if (loading) return <div className="h-screen flex items-center justify-center bg-brand-cream">Loading product...</div>;
+  if (!product) return <div className="h-screen flex items-center justify-center bg-brand-cream">Product not found</div>;
+
   const imageUrl = (Array.isArray(product.images) && product.images.length > 0 && isValidHttpUrl(product.images[0])) ? product.images[0] : 'https://placehold.co/600x600';
 
   return (
@@ -101,39 +97,46 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ addToCart }) => {
                 {product.description}
               </p>
 
-              <button
-                onClick={handleAddToCart}
-                disabled={isAdded}
-                className={`w-full py-5 rounded-full font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 ${
-                  isAdded 
-                    ? 'bg-brand-green text-white scale-95' 
-                    : 'bg-brand-dark text-white hover:bg-brand-green hover:shadow-lg'
-                }`}
-              >
-                <AnimatePresence mode="wait">
-                  {isAdded ? (
-                    <motion.div
-                      key="check"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <Check size={24} /> Added to Cart
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="add"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      Add to Cart
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 border border-brand-dark/10 rounded-full p-2">
+                  <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-2 rounded-full hover:bg-black/5 transition-colors"><Minus size={16} /></button>
+                  <span className="font-bold text-lg w-8 text-center">{quantity}</span>
+                  <button onClick={() => setQuantity(q => q + 1)} className="p-2 rounded-full hover:bg-black/5 transition-colors"><Plus size={16} /></button>
+                </div>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isAdded}
+                  className={`w-full py-4 rounded-full font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 ${
+                    isAdded 
+                      ? 'bg-brand-green text-white' 
+                      : 'bg-brand-dark text-white hover:bg-brand-green hover:shadow-lg'
+                  }`}
+                >
+                  <AnimatePresence mode="wait">
+                    {isAdded ? (
+                      <motion.span
+                        key="check"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check size={24} /> Added
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="add"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                      >
+                        Add to Cart
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </button>
+              </div>
+
 
               <div className="mt-12 border-t border-brand-dark/10 divide-y divide-brand-dark/10">
                 
@@ -186,13 +189,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ addToCart }) => {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="pt-4 pb-2 text-brand-dark/70 space-y-3">
-                           <div className="flex gap-3 items-start">
-                             <Truck size={20} className="text-brand-sage shrink-0 mt-1" />
-                             <p>Free worldwide shipping on orders over $100. All orders are processed within 1-2 business days.</p>
-                           </div>
-                           <p className="text-sm pl-8">Returns accepted within 30 days of purchase for unopened products.</p>
-                        </div>
+                         <p className="pt-4 pb-2 text-brand-dark/70">Free worldwide shipping on orders over $100. Returns accepted within 30 days for unopened products.</p>
                       </motion.div>
                     )}
                   </AnimatePresence>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { collection, doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
@@ -16,24 +16,36 @@ import Admin from './pages/Admin';
 
 import { useFirebase } from './firebase/FirebaseProvider';
 import { CartItem, Product } from './types';
+import { isValidHttpUrl } from './lib/utils';
 
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
-}
-
-const AnimatedRoutes = () => {
+const AnimatedRoutes: React.FC<{
+  products: Product[];
+  cartItems: CartItem[];
+  addToCart: (product: Product, quantity: number) => void;
+  clearCart: () => Promise<void>;
+}> = ({ products, cartItems, addToCart, clearCart }) => {
   const location = useLocation();
-  const { firestore, user } = useFirebase();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Home products={products} />} />
+        <Route path="/shop" element={<Shop products={products} />} />
+        <Route path="/explore" element={<Explore products={products} />} />
+        <Route path="/product/:id" element={<ProductDetails addToCart={addToCart} />} />
+        <Route path="/checkout" element={<Checkout cartItems={cartItems} clearCart={clearCart} />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+const App: React.FC = () => {
+  const { firestore, user, loading, isAdmin } = useFirebase();
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [cartId, setCartId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!firestore) return;
@@ -47,7 +59,6 @@ const AnimatedRoutes = () => {
   useEffect(() => {
     if (!firestore || !user) {
       setCartItems([]);
-      setCartId(null);
       return;
     }
 
@@ -55,46 +66,31 @@ const AnimatedRoutes = () => {
     const unsub = onSnapshot(cartRef, async (cartDoc) => {
       if (cartDoc.exists()) {
         const cartData = cartDoc.data();
-        const productIds = cartData.items.map((item: { productId: string }) => item.productId);
-        
-        if (productIds.length > 0) {
-          const productsPromises = productIds.map((id: string) => getDoc(doc(firestore, 'products', id)));
-          const productSnapshots = await Promise.all(productsPromises);
-          
-          const productsData = productSnapshots.reduce((acc, doc) => {
-            if (doc.exists()) {
-              acc[doc.id] = { ...doc.data(), id: doc.id } as Product;
-            }
-            return acc;
-          }, {} as { [key: string]: Product });
+        const itemPromises = (cartData.items || []).map(async (item: {productId: string, quantity: number}) => {
+          const productDocRef = doc(firestore, 'products', item.productId);
+          const productDoc = await getDoc(productDocRef);
+          if (productDoc.exists()) {
+            const productData = { ...productDoc.data(), id: productDoc.id } as Product;
+            const imageUrl = (Array.isArray(productData.images) && productData.images.length > 0 && isValidHttpUrl(productData.images[0])) ? productData.images[0] : 'https://placehold.co/400x400';
+            return {
+              id: productDoc.id,
+              name: productData.name,
+              price: productData.price,
+              image: imageUrl,
+              quantity: item.quantity,
+            };
+          }
+          return null;
+        });
 
-          const populatedItems = cartData.items.map((item: { productId: string; quantity: number }) => {
-            const product = productsData[item.productId];
-            if (product) {
-              const imageUrl = (Array.isArray(product.images) && product.images.length > 0 && isValidHttpUrl(product.images[0])) ? product.images[0] : 'https://placehold.co/400x400';
-              return {
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: imageUrl,
-                quantity: item.quantity,
-              };
-            }
-            return null;
-          }).filter(Boolean) as CartItem[];
-          
-          setCartItems(populatedItems);
-        } else {
-          setCartItems([]);
-        }
-        setCartId(cartDoc.id);
+        const resolvedItems = (await Promise.all(itemPromises)).filter(Boolean) as CartItem[];
+        setCartItems(resolvedItems);
       } else {
         setCartItems([]);
       }
     });
 
     return () => unsub();
-
   }, [firestore, user]);
 
   const addToCart = async (product: Product, quantity: number) => {
@@ -142,20 +138,21 @@ const AnimatedRoutes = () => {
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (!firestore || !user) return;
-    if (newQuantity < 1) {
-      removeFromCart(productId);
-      return;
-    }
     const cartRef = doc(firestore, 'carts', user.uid);
     const cartDoc = await getDoc(cartRef);
-    if (cartDoc.exists()) {
-      const items = cartDoc.data().items || [];
-      const itemIndex = items.findIndex((item: { productId: string }) => item.productId === productId);
-      if (itemIndex > -1) {
+    if (!cartDoc.exists()) return;
+
+    const items = cartDoc.data().items || [];
+    const itemIndex = items.findIndex((item: { productId: string }) => item.productId === productId);
+
+    if (itemIndex > -1) {
         const newItems = [...items];
-        newItems[itemIndex].quantity = newQuantity;
+        if (newQuantity < 1) {
+            newItems.splice(itemIndex, 1);
+        } else {
+            newItems[itemIndex].quantity = newQuantity;
+        }
         await updateDoc(cartRef, { items: newItems, updatedAt: new Date() });
-      }
     }
   };
   
@@ -164,45 +161,32 @@ const AnimatedRoutes = () => {
     const cartRef = doc(firestore, 'carts', user.uid);
     await updateDoc(cartRef, { items: [], updatedAt: new Date() });
   };
-
-
-  return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Home products={products} />} />
-        <Route path="/shop" element={<Shop products={products} />} />
-        <Route path="/explore" element={<Explore products={products} />} />
-        <Route path="/product/:id" element={<ProductDetails addToCart={addToCart} />} />
-        <Route path="/checkout" element={<Checkout cartItems={cartItems} clearCart={clearCart} />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/admin" element={<Admin />} />
-      </Routes>
-    </AnimatePresence>
-  );
-};
-
-const App: React.FC = () => {
-  const { user, loading, isAdmin } = useFirebase();
-  const [isCartOpen, setIsCartOpen] = useState(false);
   
   if (loading) {
-    return <div>Loading...</div>; // Or a proper splash screen
+    return <div className="bg-brand-dark text-brand-cream min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   return (
     <div className="min-h-screen font-sans selection:bg-brand-sage selection:text-white">
       <Navbar
         toggleCart={() => setIsCartOpen(!isCartOpen)}
-        cartCount={0} // This will be dynamic later
+        cartCount={cartItems.reduce((acc, item) => acc + item.quantity, 0)}
         user={user}
         isAdmin={isAdmin}
       />
       <CartDrawer 
         isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        updateQuantity={updateQuantity}
+        removeFromCart={removeFromCart}
       />
-      <AnimatedRoutes />
+      <AnimatedRoutes 
+        products={products}
+        cartItems={cartItems}
+        addToCart={addToCart}
+        clearCart={clearCart}
+      />
     </div>
   );
 };

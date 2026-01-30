@@ -3,20 +3,10 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Product } from '../types';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface HomeProps {
   products: Product[];
-}
-
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 const Home: React.FC<HomeProps> = ({ products }) => {
@@ -24,8 +14,11 @@ const Home: React.FC<HomeProps> = ({ products }) => {
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -100]);
 
-  const parallaxImage1 = products[4] && (Array.isArray(products[4].images) && products[4].images.length > 0 && isValidHttpUrl(products[4].images[0])) ? products[4].images[0] : 'https://placehold.co/400x400';
-  const parallaxImage2 = products[2] && (Array.isArray(products[2].images) && products[2].images.length > 0 && isValidHttpUrl(products[2].images[0])) ? products[2].images[0] : 'https://placehold.co/400x400';
+  const parallaxImage1Src = products.length > 0 && products[0].images.length > 0 ? products[0].images[0] : 'https://placehold.co/400x600';
+  const parallaxImage2Src = products.length > 1 && products[1].images.length > 0 ? products[1].images[0] : 'https://placehold.co/400x600';
+
+  const parallaxImage1 = isValidHttpUrl(parallaxImage1Src) ? parallaxImage1Src : 'https://placehold.co/400x600';
+  const parallaxImage2 = isValidHttpUrl(parallaxImage2Src) ? parallaxImage2Src : 'https://placehold.co/400x600';
   
   const featuredProducts = products.slice(0, 4);
 

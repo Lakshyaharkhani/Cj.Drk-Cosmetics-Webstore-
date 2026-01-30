@@ -3,20 +3,10 @@ import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../types';
 import { ArrowRight } from 'lucide-react';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface ExploreProps {
   products: Product[];
-}
-
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 const ExploreItem: React.FC<{ product: Product; index: number }> = ({ product, index }) => {

@@ -5,21 +5,11 @@ import { useFirebase } from '../firebase/FirebaseProvider';
 import { CartItem } from '../types';
 import { Check, Loader } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface CheckoutProps {
   cartItems: CartItem[];
   clearCart: () => void;
-}
-
-function isValidHttpUrl(string: string | undefined | null): boolean {
-  if (!string) return false;
-  let url;
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-  return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, clearCart }) => {
@@ -28,6 +18,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, clearCart }) => {
   const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   
   const [formData, setFormData] = useState({
+    fullName: '',
     email: user?.email || '',
     address: '',
     city: '',
@@ -52,9 +43,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, clearCart }) => {
     try {
       await addDoc(collection(firestore, 'orders'), {
         userId: user.uid,
-        items: cartItems,
+        items: cartItems.map(({ id, name, price, image, quantity }) => ({ productId: id, name, price, image, quantity })), // Storing a leaner version
         totalAmount: total,
         shippingAddress: {
+          fullName: formData.fullName,
           email: formData.email,
           address: formData.address,
           city: formData.city,
@@ -141,6 +133,18 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, clearCart }) => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-brand-dark mb-2">Full Name</label>
+                <input 
+                  type="text" 
+                  name="fullName"
+                  required
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="w-full p-4 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-green transition-colors" 
+                  placeholder="Jane Doe" 
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-brand-dark mb-2">Email Address</label>
                 <input 
