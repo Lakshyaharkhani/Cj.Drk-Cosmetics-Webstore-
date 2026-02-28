@@ -4,6 +4,7 @@ import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useFirebase } from '../firebase/FirebaseProvider';
 import { CartItem } from '../types';
+import { isValidHttpUrl } from '../lib/utils';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -57,42 +58,45 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, cartItems, upd
                   <button onClick={onClose} className="mt-4 text-brand-green font-medium hover:underline">Start Shopping</button>
                 </div>
               ) : (
-                cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4">
-                    <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-serif font-semibold leading-tight mb-1">{item.name}</h3>
-                        <p className="text-sm text-brand-dark/60">${item.price.toFixed(2)}</p>
+                cartItems.map((item) => {
+                  const imageUrl = isValidHttpUrl(item.image) ? item.image : 'https://placehold.co/400x400';
+                  return (
+                    <div key={item.id} className="flex gap-4">
+                      <div className="w-20 h-20 bg-white rounded-lg overflow-hidden shrink-0">
+                        <img src={imageUrl} alt={item.name} className="w-full h-full object-cover" />
                       </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3 bg-white/50 rounded-full px-2 py-1 border border-brand-dark/5">
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="font-serif font-semibold leading-tight mb-1">{item.name}</h3>
+                          <p className="text-sm text-brand-dark/60">${item.price.toFixed(2)}</p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3 bg-white/50 rounded-full px-2 py-1 border border-brand-dark/5">
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
+                            <button 
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
+                            onClick={() => removeFromCart(item.id)} 
+                            className="text-brand-accent text-xs hover:underline flex items-center gap-1"
                           >
-                            <Minus size={12} />
-                          </button>
-                          <span className="text-xs font-medium w-4 text-center">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-1 hover:bg-brand-dark/10 rounded-full transition-colors"
-                          >
-                            <Plus size={12} />
+                            <Trash2 size={12} /> Remove
                           </button>
                         </div>
-                        <button 
-                          onClick={() => removeFromCart(item.id)} 
-                          className="text-brand-accent text-xs hover:underline flex items-center gap-1"
-                        >
-                          <Trash2 size={12} /> Remove
-                        </button>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 

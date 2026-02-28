@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { FirebaseProvider } from './firebase/FirebaseProvider';
+import { FirebaseErrorListener } from './components/FirebaseErrorListener';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,9 +14,11 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <FirebaseProvider>
-      <HashRouter>
-        <App />
-      </HashRouter>
+      <FirebaseErrorListener>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </FirebaseErrorListener>
     </FirebaseProvider>
   </React.StrictMode>
 );

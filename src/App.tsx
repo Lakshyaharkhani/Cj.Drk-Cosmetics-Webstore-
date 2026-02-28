@@ -15,6 +15,8 @@ import Auth from './pages/Auth';
 import Admin from './pages/Admin';
 
 import { useFirebase } from './firebase/FirebaseProvider';
+import { errorEmitter } from './firebase/error-emitter';
+import { FirestorePermissionError } from './firebase/errors';
 import { CartItem, Product } from './types';
 import { isValidHttpUrl } from './lib/utils';
 
@@ -49,10 +51,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (!firestore) return;
-    const unsub = onSnapshot(collection(firestore, 'products'), (snapshot) => {
-      const productsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
-      setProducts(productsData);
-    });
+    const unsub = onSnapshot(
+      collection(firestore, 'products'), 
+      (snapshot) => {
+        const productsData = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
+        setProducts(productsData);
+      },
+      async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'products',
+          operation: 'list'
+        }));
+      }
+    );
     return () => unsub();
   }, [firestore]);
   
@@ -63,32 +74,41 @@ const App: React.FC = () => {
     }
 
     const cartRef = doc(firestore, 'carts', user.uid);
-    const unsub = onSnapshot(cartRef, async (cartDoc) => {
-      if (cartDoc.exists()) {
-        const cartData = cartDoc.data();
-        const itemPromises = (cartData.items || []).map(async (item: {productId: string, quantity: number}) => {
-          const productDocRef = doc(firestore, 'products', item.productId);
-          const productDoc = await getDoc(productDocRef);
-          if (productDoc.exists()) {
-            const productData = { ...productDoc.data(), id: productDoc.id } as Product;
-            const imageUrl = (Array.isArray(productData.images) && productData.images.length > 0 && isValidHttpUrl(productData.images[0])) ? productData.images[0] : 'https://placehold.co/400x400';
-            return {
-              id: productDoc.id,
-              name: productData.name,
-              price: productData.price,
-              image: imageUrl,
-              quantity: item.quantity,
-            };
-          }
-          return null;
-        });
+    const unsub = onSnapshot(
+      cartRef, 
+      async (cartDoc) => {
+        if (cartDoc.exists()) {
+          const cartData = cartDoc.data();
+          const itemPromises = (cartData.items || []).map(async (item: {productId: string, quantity: number}) => {
+            const productDocRef = doc(firestore, 'products', item.productId);
+            const productDoc = await getDoc(productDocRef);
+            if (productDoc.exists()) {
+              const productData = { ...productDoc.data(), id: productDoc.id } as Product;
+              const imageUrl = (Array.isArray(productData.images) && productData.images.length > 0 && isValidHttpUrl(productData.images[0])) ? productData.images[0] : 'https://placehold.co/400x400';
+              return {
+                id: productDoc.id,
+                name: productData.name,
+                price: productData.price,
+                image: imageUrl,
+                quantity: item.quantity,
+              };
+            }
+            return null;
+          });
 
-        const resolvedItems = (await Promise.all(itemPromises)).filter(Boolean) as CartItem[];
-        setCartItems(resolvedItems);
-      } else {
-        setCartItems([]);
+          const resolvedItems = (await Promise.all(itemPromises)).filter(Boolean) as CartItem[];
+          setCartItems(resolvedItems);
+        } else {
+          setCartItems([]);
+        }
+      },
+      async (err) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: cartRef.path,
+          operation: 'get'
+        }));
       }
-    });
+    );
 
     return () => unsub();
   }, [firestore, user]);
@@ -100,66 +120,97 @@ const App: React.FC = () => {
     }
 
     const cartRef = doc(firestore, 'carts', user.uid);
-    const cartDoc = await getDoc(cartRef);
+    const cartItem = { productId: product.id, quantity };
 
-    const cartItem = {
-      productId: product.id,
-      quantity,
-    };
-    
-    if (cartDoc.exists()) {
-      const items = cartDoc.data().items || [];
-      const existingItemIndex = items.findIndex((item: { productId: string }) => item.productId === product.id);
+    getDoc(cartRef).then(cartDoc => {
+      if (cartDoc.exists()) {
+        const items = cartDoc.data().items || [];
+        const existingItemIndex = items.findIndex((item: { productId: string }) => item.productId === product.id);
 
-      if (existingItemIndex > -1) {
-        const newItems = [...items];
-        newItems[existingItemIndex].quantity += quantity;
-        await updateDoc(cartRef, { items: newItems, updatedAt: new Date() });
+        if (existingItemIndex > -1) {
+          const newItems = [...items];
+          newItems[existingItemIndex].quantity += quantity;
+          updateDoc(cartRef, { items: newItems, updatedAt: new Date() }).catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: cartRef.path,
+              operation: 'update',
+              requestResourceData: { items: newItems }
+            }));
+          });
+        } else {
+          updateDoc(cartRef, { items: arrayUnion(cartItem), updatedAt: new Date() }).catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: cartRef.path,
+              operation: 'update',
+              requestResourceData: { items: cartItem }
+            }));
+          });
+        }
       } else {
-        await updateDoc(cartRef, { items: arrayUnion(cartItem), updatedAt: new Date() });
+        setDoc(cartRef, { userId: user.uid, items: [cartItem], updatedAt: new Date() }).catch(err => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: cartRef.path,
+            operation: 'create',
+            requestResourceData: { userId: user.uid, items: [cartItem] }
+          }));
+        });
       }
-    } else {
-      await setDoc(cartRef, { userId: user.uid, items: [cartItem], updatedAt: new Date() });
-    }
+    });
   };
 
   const removeFromCart = async (productId: string) => {
     if (!firestore || !user) return;
     const cartRef = doc(firestore, 'carts', user.uid);
-    const cartDoc = await getDoc(cartRef);
-    if (cartDoc.exists()) {
-      const items = cartDoc.data().items || [];
-      const itemToRemove = items.find((item: { productId: string }) => item.productId === productId);
-      if (itemToRemove) {
-        await updateDoc(cartRef, { items: arrayRemove(itemToRemove), updatedAt: new Date() });
+    getDoc(cartRef).then(cartDoc => {
+      if (cartDoc.exists()) {
+        const items = cartDoc.data().items || [];
+        const itemToRemove = items.find((item: { productId: string }) => item.productId === productId);
+        if (itemToRemove) {
+          updateDoc(cartRef, { items: arrayRemove(itemToRemove), updatedAt: new Date() }).catch(err => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: cartRef.path,
+              operation: 'update'
+            }));
+          });
+        }
       }
-    }
+    });
   };
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (!firestore || !user) return;
     const cartRef = doc(firestore, 'carts', user.uid);
-    const cartDoc = await getDoc(cartRef);
-    if (!cartDoc.exists()) return;
+    getDoc(cartRef).then(cartDoc => {
+      if (!cartDoc.exists()) return;
+      const items = cartDoc.data().items || [];
+      const itemIndex = items.findIndex((item: { productId: string }) => item.productId === productId);
 
-    const items = cartDoc.data().items || [];
-    const itemIndex = items.findIndex((item: { productId: string }) => item.productId === productId);
-
-    if (itemIndex > -1) {
+      if (itemIndex > -1) {
         const newItems = [...items];
         if (newQuantity < 1) {
-            newItems.splice(itemIndex, 1);
+          newItems.splice(itemIndex, 1);
         } else {
-            newItems[itemIndex].quantity = newQuantity;
+          newItems[itemIndex].quantity = newQuantity;
         }
-        await updateDoc(cartRef, { items: newItems, updatedAt: new Date() });
-    }
+        updateDoc(cartRef, { items: newItems, updatedAt: new Date() }).catch(err => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: cartRef.path,
+            operation: 'update'
+          }));
+        });
+      }
+    });
   };
   
   const clearCart = async () => {
     if (!firestore || !user) return;
     const cartRef = doc(firestore, 'carts', user.uid);
-    await updateDoc(cartRef, { items: [], updatedAt: new Date() });
+    updateDoc(cartRef, { items: [], updatedAt: new Date() }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: cartRef.path,
+        operation: 'update'
+      }));
+    });
   };
   
   if (loading) {

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useFirebase } from '../firebase/FirebaseProvider';
+import { errorEmitter } from '../firebase/error-emitter';
+import { FirestorePermissionError } from '../firebase/errors';
 import { CartItem } from '../types';
 import { Check, Loader } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -40,31 +42,35 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, clearCart }) => {
     }
     setIsSubmitting(true);
     
-    try {
-      await addDoc(collection(firestore, 'orders'), {
-        userId: user.uid,
-        items: cartItems.map(({ id, name, price, image, quantity }) => ({ productId: id, name, price, image, quantity })), // Storing a leaner version
-        totalAmount: total,
-        shippingAddress: {
-          fullName: formData.fullName,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          zip: formData.zip
-        },
-        status: 'pending',
-        createdAt: serverTimestamp()
-      });
+    const orderData = {
+      userId: user.uid,
+      items: cartItems.map(({ id, name, price, image, quantity }) => ({ productId: id, name, price, image, quantity })),
+      totalAmount: total,
+      shippingAddress: {
+        fullName: formData.fullName,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        zip: formData.zip
+      },
+      status: 'pending',
+      createdAt: serverTimestamp()
+    };
 
-      await clearCart();
-      setIsSubmitting(false);
-      setIsSuccess(true);
-      
-    } catch (error) {
-      console.error("Error placing order: ", error);
-      alert("There was an error placing your order. Please try again.");
-      setIsSubmitting(false);
-    }
+    addDoc(collection(firestore, 'orders'), orderData)
+      .then(async () => {
+        await clearCart();
+        setIsSubmitting(false);
+        setIsSuccess(true);
+      })
+      .catch(async (err) => {
+        setIsSubmitting(false);
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: 'orders',
+          operation: 'create',
+          requestResourceData: orderData
+        }));
+      });
   };
 
   if (isSuccess) {
