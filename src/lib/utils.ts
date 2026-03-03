@@ -1,3 +1,4 @@
+
 export function isValidHttpUrl(string: string | undefined | null): boolean {
   if (!string) return false;
   try {
@@ -6,4 +7,8 @@ export function isValidHttpUrl(string: string | undefined | null): boolean {
   } catch (_) {
     return false;
   }
+}
+
+export function cn(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
 }

@@ -57,7 +57,6 @@ const Navbar: React.FC<NavbarProps> = ({ toggleCart, cartCount, user, isAdmin })
   const navLinks = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/shop', label: 'Shop', icon: ShoppingCart },
-    { path: '/explore', label: 'Explore', icon: Compass },
     { path: '/contact', label: 'Contact', icon: Mail },
   ];
   

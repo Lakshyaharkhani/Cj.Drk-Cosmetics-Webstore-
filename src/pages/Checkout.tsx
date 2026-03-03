@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useFirebase } from '../firebase/FirebaseProvider';
 import { errorEmitter } from '../firebase/error-emitter';
-import { FirestorePermissionError } from '../firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '../firebase/errors';
 import { CartItem } from '../types';
 import { Check, Loader } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';

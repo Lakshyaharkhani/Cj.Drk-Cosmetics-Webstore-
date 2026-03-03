@@ -1,24 +1,33 @@
+
 {
-  "name": "cj-drk-cosmetic-™",
+  "name": "cj-drk-cosmetic-internal",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
   "dependencies": {
-    "framer-motion": "^11.3.2",
-    "lucide-react": "^0.408.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.24.1"
+    "@vitejs/plugin-react": "^4.3.4",
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.469.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.28.0",
+    "vite": "^5.4.11"
   },
-  "devDependencies": {
-    "@types/node": "^20.14.10",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "~5.5.3",
-    "vite": "^5.3.3"
+  "overrides": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@babel/code-frame": "7.25.9",
+    "@babel/generator": "7.25.9",
+    "@babel/helpers": "7.25.9",
+    "@babel/template": "7.25.9",
+    "@babel/traverse": "7.25.9",
+    "@babel/types": "7.25.9",
+    "@babel/parser": "7.25.9",
+    "@babel/core": "7.25.9",
+    "@babel/helper-compilation-targets": "7.25.9",
+    "@babel/helper-module-transforms": "7.25.9",
+    "@babel/plugin-syntax-jsx": "7.25.9",
+    "@babel/helper-plugin-utils": "7.25.9",
+    "@babel/helper-validator-label": "7.25.9"
   }
 }

@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { collection, doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, doc, onSnapshot, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 
 import Navbar from './components/Navbar';
 import CartDrawer from './components/CartDrawer';
@@ -16,16 +17,17 @@ import Admin from './pages/Admin';
 
 import { useFirebase } from './firebase/FirebaseProvider';
 import { errorEmitter } from './firebase/error-emitter';
-import { FirestorePermissionError } from './firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from './firebase/errors';
 import { CartItem, Product } from './types';
 import { isValidHttpUrl } from './lib/utils';
 
 const AnimatedRoutes: React.FC<{
   products: Product[];
   cartItems: CartItem[];
+  cartId: string;
   addToCart: (product: Product, quantity: number) => void;
   clearCart: () => Promise<void>;
-}> = ({ products, cartItems, addToCart, clearCart }) => {
+}> = ({ products, cartItems, cartId, addToCart, clearCart }) => {
   const location = useLocation();
   return (
     <AnimatePresence mode="wait">
@@ -48,6 +50,7 @@ const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartId, setCartId] = useState("");
 
   useEffect(() => {
     if (!firestore) return;
@@ -70,9 +73,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!firestore || !user) {
       setCartItems([]);
+      setCartId("");
       return;
     }
 
+    setCartId(user.uid);
     const cartRef = doc(firestore, 'carts', user.uid);
     const unsub = onSnapshot(
       cartRef, 
@@ -130,7 +135,7 @@ const App: React.FC = () => {
         if (existingItemIndex > -1) {
           const newItems = [...items];
           newItems[existingItemIndex].quantity += quantity;
-          updateDoc(cartRef, { items: newItems, updatedAt: new Date() }).catch(err => {
+          updateDoc(cartRef, { items: newItems, updatedAt: serverTimestamp() }).catch(async (err) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: cartRef.path,
               operation: 'update',
@@ -138,7 +143,7 @@ const App: React.FC = () => {
             }));
           });
         } else {
-          updateDoc(cartRef, { items: arrayUnion(cartItem), updatedAt: new Date() }).catch(err => {
+          updateDoc(cartRef, { items: arrayUnion(cartItem), updatedAt: serverTimestamp() }).catch(async (err) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: cartRef.path,
               operation: 'update',
@@ -147,7 +152,7 @@ const App: React.FC = () => {
           });
         }
       } else {
-        setDoc(cartRef, { userId: user.uid, items: [cartItem], updatedAt: new Date() }).catch(err => {
+        setDoc(cartRef, { userId: user.uid, items: [cartItem], updatedAt: serverTimestamp() }).catch(async (err) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: cartRef.path,
             operation: 'create',
@@ -166,7 +171,7 @@ const App: React.FC = () => {
         const items = cartDoc.data().items || [];
         const itemToRemove = items.find((item: { productId: string }) => item.productId === productId);
         if (itemToRemove) {
-          updateDoc(cartRef, { items: arrayRemove(itemToRemove), updatedAt: new Date() }).catch(err => {
+          updateDoc(cartRef, { items: arrayRemove(itemToRemove), updatedAt: serverTimestamp() }).catch(async (err) => {
             errorEmitter.emit('permission-error', new FirestorePermissionError({
               path: cartRef.path,
               operation: 'update'
@@ -192,7 +197,7 @@ const App: React.FC = () => {
         } else {
           newItems[itemIndex].quantity = newQuantity;
         }
-        updateDoc(cartRef, { items: newItems, updatedAt: new Date() }).catch(err => {
+        updateDoc(cartRef, { items: newItems, updatedAt: serverTimestamp() }).catch(async (err) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: cartRef.path,
             operation: 'update'
@@ -205,7 +210,7 @@ const App: React.FC = () => {
   const clearCart = async () => {
     if (!firestore || !user) return;
     const cartRef = doc(firestore, 'carts', user.uid);
-    updateDoc(cartRef, { items: [], updatedAt: new Date() }).catch(err => {
+    updateDoc(cartRef, { items: [], updatedAt: serverTimestamp() }).catch(async (err) => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: cartRef.path,
         operation: 'update'
@@ -235,6 +240,7 @@ const App: React.FC = () => {
       <AnimatedRoutes 
         products={products}
         cartItems={cartItems}
+        cartId={cartId}
         addToCart={addToCart}
         clearCart={clearCart}
       />
